@@ -36,7 +36,8 @@ NAMESPACE_BEGIN(mitsuba)
 template <typename Float, typename Spectrum>
 class MI_EXPORT_LIB Integrator : public Object {
 public:
-    MI_IMPORT_TYPES(Scene, Sensor)
+    // [MIS]: add of MIS Model type from `mitsuba/render/fwd.h`
+    MI_IMPORT_TYPES(Scene, Sensor, MISModel)
 
     /**
      * \brief Render the scene
@@ -156,7 +157,9 @@ class MI_EXPORT_LIB SamplingIntegrator : public Integrator<Float, Spectrum> {
 public:
     MI_IMPORT_BASE(Integrator, should_stop, aov_names,
                     m_stop, m_timeout, m_render_timer, m_hide_emitters)
-    MI_IMPORT_TYPES(Scene, Sensor, Film, ImageBlock, Medium, Sampler)
+
+    // [MIS]: add of MIS Model type from `mitsuba/render/fwd.h`                    
+    MI_IMPORT_TYPES(Scene, Sensor, Film, ImageBlock, Medium, Sampler, MISModel)
 
     /**
      * \brief Sample the incident radiance along a ray.
@@ -200,6 +203,7 @@ public:
     virtual std::pair<Spectrum, Mask> sample(const Scene *scene,
                                              Sampler *sampler,
                                              const RayDifferential3f &ray,
+                                             uint32_t sample_id,
                                              const Medium *medium = nullptr,
                                              Float *aovs = nullptr,
                                              Mask active = true) const;
@@ -325,7 +329,7 @@ public:
      */
     virtual void sample(const Scene *scene, const Sensor *sensor,
                         Sampler *sampler, ImageBlock *block,
-                        ScalarFloat sample_scale) const = 0;
+                        ScalarFloat sample_scale, uint32_t sample_id) const = 0;
 
     // =========================================================================
     //! @{ \name Integrator interface implementation

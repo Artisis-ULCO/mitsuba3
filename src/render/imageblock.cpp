@@ -25,6 +25,8 @@ ImageBlock<Float, Spectrum>::ImageBlock(const ScalarVector2u &size,
     // Determine the size of the boundary region from the reconstruction filter
     m_border_size = (m_rfilter && border) ? m_rfilter->border_size() : 0u;
 
+    // [MIS] TODO: prepare data
+
     // Allocate memory for the image tensor
     set_size(size);
 }

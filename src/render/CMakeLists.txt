@@ -61,7 +61,8 @@ add_library(mitsuba-render OBJECT
   medium.cpp       ${INC_DIR}/medium.h
   mesh.cpp         ${INC_DIR}/mesh.h
   microfacet.cpp   ${INC_DIR}/microfacet.h
-                   ${INC_DIR}/mueller.h
+                   ${INC_DIR}/mueller.h   
+  mis.cpp          ${INC_DIR}/mis.h               
   phase.cpp        ${INC_DIR}/phase.h
   sampler.cpp      ${INC_DIR}/sampler.h
   scene.cpp        ${INC_DIR}/scene.h

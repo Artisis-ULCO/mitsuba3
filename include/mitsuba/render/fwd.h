@@ -34,6 +34,10 @@ template <typename Float, typename Spectrum> class Volume;
 template <typename Float, typename Spectrum> class VolumeGrid;
 template <typename Float, typename Spectrum> class MeshAttribute;
 
+// [MIS]
+template <typename Float, typename Spectrum> class MISModel;
+template <typename Float, typename Spectrum> class MISTsallis;
+
 template <typename Float, typename Spectrum> struct DirectionSample;
 template <typename Float, typename Spectrum> struct PositionSample;
 template <typename Float, typename Spectrum> struct BSDFSample3;
@@ -97,6 +101,10 @@ template <typename Float_, typename Spectrum_> struct RenderAliases {
     using VolumeGrid             = mitsuba::VolumeGrid<FloatU, SpectrumU>;
 
     using MeshAttribute          = mitsuba::MeshAttribute<FloatU, SpectrumU>;
+
+    // [MIS]
+    using MISModel               = mitsuba::MISModel<FloatU, SpectrumU>;
+    using MISTsallis             = mitsuba::MISTsallis<FloatU, SpectrumU>;
 
     using ObjectPtr              = dr::replace_scalar_t<Float, const Object *>;
     using BSDFPtr                = dr::replace_scalar_t<Float, const BSDF *>;
@@ -168,6 +176,8 @@ template <typename Float_, typename Spectrum_> struct RenderAliases {
     using SamplingIntegrator     = typename RenderAliases::SamplingIntegrator;                     \
     using MonteCarloIntegrator   = typename RenderAliases::MonteCarloIntegrator;                   \
     using AdjointIntegrator      = typename RenderAliases::AdjointIntegrator;                      \
+    using MISModel               = typename RenderAliases::MISModel;                               \
+    using MISTsallis             = typename RenderAliases::MISTsallis;                             \
     using BSDF                   = typename RenderAliases::BSDF;                                   \
     using OptixDenoiser          = typename RenderAliases::OptixDenoiser;                          \
     using Sensor                 = typename RenderAliases::Sensor;                                 \
@@ -186,6 +196,6 @@ template <typename Float_, typename Spectrum_> struct RenderAliases {
     using MediumPtr              = typename RenderAliases::MediumPtr;                              \
     using ShapePtr               = typename RenderAliases::ShapePtr;                               \
     using EmitterPtr             = typename RenderAliases::EmitterPtr;                             \
-    using SensorPtr              = typename RenderAliases::SensorPtr;
+    using SensorPtr              = typename RenderAliases::SensorPtr;                      
 
 NAMESPACE_END(mitsuba)

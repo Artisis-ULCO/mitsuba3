@@ -196,6 +196,7 @@ public:
     std::pair<Spectrum, Mask> sample(const Scene *scene,
                                      Sampler * sampler,
                                      const RayDifferential3f &ray,
+                                     uint32_t sample_id,
                                      const Medium *medium,
                                      Float *aovs,
                                      Mask active) const override {
@@ -307,7 +308,7 @@ public:
 
                 case Type::IntegratorRGBA: {
                         std::pair<Spectrum, Mask> result_sub =
-                            m_integrators[ctr].first->sample(scene, sampler, ray, medium, aovs, active);
+                            m_integrators[ctr].first->sample(scene, sampler, ray, sample_id, medium, aovs, active);
                         aovs += m_integrators[ctr].second;
                         Color3f rgb =
                             spectrum_to_color3f(result_sub.first, ray, active);

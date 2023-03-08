@@ -95,6 +95,7 @@ public:
     std::pair<Spectrum, Bool> sample(const Scene *scene,
                                      Sampler *sampler,
                                      const RayDifferential3f &ray_,
+                                     uint32_t sample_id,
                                      const Medium * /* medium */,
                                      Float * /* aovs */,
                                      Bool active) const override {

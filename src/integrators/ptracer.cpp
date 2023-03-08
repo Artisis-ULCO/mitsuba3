@@ -75,7 +75,7 @@ public:
     ParticleTracerIntegrator(const Properties &props) : Base(props) { }
 
     void sample(const Scene *scene, const Sensor *sensor, Sampler *sampler,
-                ImageBlock *block, ScalarFloat sample_scale) const override {
+                ImageBlock *block, ScalarFloat sample_scale, uint32_t sample_id) const override {
         // Account for emitters directly visible from the sensor
         if (m_max_depth != 0 && !m_hide_emitters)
             sample_visible_emitters(scene, sensor, sampler, block, sample_scale);

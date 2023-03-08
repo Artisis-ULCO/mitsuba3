@@ -387,6 +387,9 @@ SamplingIntegrator<Float, Spectrum>::render_sample(const Scene *scene,
     const bool has_alpha = has_flag(film->flags(), FilmFlags::Alpha);
     const bool box_filter = film->rfilter()->is_box_filter();
 
+    // [MIS] find current mis model
+    MISModel *mis_model = film->get_mis_model(pos);
+
     ScalarVector2f scale = 1.f / ScalarVector2f(film->crop_size()),
                    offset = -ScalarVector2f(film->crop_offset()) * scale;
 
@@ -413,7 +416,9 @@ SamplingIntegrator<Float, Spectrum>::render_sample(const Scene *scene,
 
     const Medium *medium = sensor->medium();
 
-    auto [spec, valid] = sample(scene, sampler, ray, medium,
+    // TODO [MIS]: send to sample the MIS Model
+    uint32_t sample_id = 0;
+    auto [spec, valid] = sample(scene, sampler, ray, sample_id, medium,
                aovs + (has_alpha ? 5 : 4) /* skip R,G,B,[A],W */, active);
 
     UnpolarizedSpectrum spec_u = unpolarized_spectrum(ray_weight * spec);
@@ -452,6 +457,7 @@ MI_VARIANT std::pair<Spectrum, typename SamplingIntegrator<Float, Spectrum>::Mas
 SamplingIntegrator<Float, Spectrum>::sample(const Scene * /* scene */,
                                             Sampler * /* sampler */,
                                             const RayDifferential3f & /* ray */,
+                                            uint32_t,
                                             const Medium * /* medium */,
                                             Float * /* aovs */,
                                             Mask /* active */) const {
@@ -605,7 +611,7 @@ AdjointIntegrator<Float, Spectrum>::render(Scene *scene,
 
                 size_t ctr = 0;
                 for (auto i = range.begin(); i != range.end() && !should_stop(); ++i) {
-                    sample(scene, sensor, sampler, block, sample_scale);
+                    sample(scene, sensor, sampler, block, sample_scale, i);
                     sampler->advance();
 
                     ctr++;

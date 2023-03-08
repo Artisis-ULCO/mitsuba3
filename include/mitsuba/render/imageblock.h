@@ -8,6 +8,8 @@
 #include <drjit/dynamic.h>
 #include <drjit/tensor.h>
 
+#include <map>
+
 NAMESPACE_BEGIN(mitsuba)
 
 /**
@@ -332,6 +334,7 @@ protected:
     // Implementation detail to atomically accumulate a value into the image block
     void accum(Float value, UInt32 index, Bool active);
 protected:
+
     ScalarPoint2i m_offset;
     ScalarVector2u m_size;
     uint32_t m_channel_count;

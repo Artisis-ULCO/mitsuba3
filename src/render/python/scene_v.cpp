@@ -1,5 +1,6 @@
 #include <mitsuba/core/bitmap.h>
 #include <mitsuba/core/properties.h>
+#include <mitsuba/render/mis.h>
 #include <mitsuba/render/integrator.h>
 #include <mitsuba/render/mesh.h>
 #include <mitsuba/render/scene.h>

@@ -81,16 +81,18 @@ public:
     std::pair<Spectrum, Mask> sample(const Scene *scene,
                                      Sampler *sampler,
                                      const RayDifferential3f &ray,
+                                     uint32_t sample_id,
                                      const Medium *medium,
                                      Float *aovs,
                                      Mask active) const override {
         py::gil_scoped_acquire gil;
         py::function sample_override = py::get_override(this, "sample");
 
+        uint32_t sampled_id = 0;
         if (sample_override) {
             using PyReturn = std::tuple<Spectrum, Mask, std::vector<Float>>;
             auto [spec, mask, aovs_] =
-                sample_override(scene, sampler, ray, medium, active)
+                sample_override(scene, sampler, ray, medium, sample_id, active)
                     .template cast<PyReturn>();
 
             std::copy(aovs_.begin(), aovs_.end(), aovs);
@@ -160,6 +162,7 @@ public:
     std::pair<Spectrum, Mask> sample(const Scene *scene,
                                      Sampler *sampler,
                                      const RayDifferential3f &ray,
+                                     uint32_t sample_id,
                                      const Medium * /* unused */,
                                      Float * /* unused */,
                                      Mask active) const override {
@@ -174,6 +177,7 @@ public:
                 "scene"_a=scene,
                 "sampler"_a=sampler,
                 "ray"_a=ray,
+                "sample_id"_a=sample_id,
                 "depth"_a=ray,
                 "δL"_a=py::none(),
                 "state_in"_a=py::none(),
@@ -239,14 +243,14 @@ MI_PY_EXPORT(Integrator) {
             "sample",
             [](const SamplingIntegrator *integrator, const Scene *scene,
                Sampler *sampler, const RayDifferential3f &ray,
-               const Medium *medium, Mask active) {
+               const Medium *medium, uint32_t sample_id, Mask active) {
                 py::gil_scoped_release release;
                 std::vector<Float> aovs(integrator->aov_names().size(), 0.f);
                 auto [spec, mask] = integrator->sample(
-                    scene, sampler, ray, medium, aovs.data(), active);
+                    scene, sampler, ray, sample_id, medium, aovs.data(), active);
                 return std::make_tuple(spec, mask, aovs);
             },
-            "scene"_a, "sampler"_a, "ray"_a, "medium"_a = nullptr,
+            "scene"_a, "sampler"_a, "ray"_a, "medium"_a = nullptr, "sample_id"_a = 0,
             "active"_a = true, D(SamplingIntegrator, sample));
 
     MI_PY_REGISTER_OBJECT("register_integrator", Integrator)
@@ -259,5 +263,5 @@ MI_PY_EXPORT(Integrator) {
 
     MI_PY_CLASS(AdjointIntegrator, Integrator)
         .def_method(AdjointIntegrator, sample, "scene"_a, "sensor"_a,
-                    "sampler"_a, "block"_a, "sample_scale"_a);
+                    "sampler"_a, "block"_a, "sample_scale"_a, "sample_id"_a);
 }

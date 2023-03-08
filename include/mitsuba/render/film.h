@@ -1,5 +1,6 @@
 #pragma once
 
+#include <drjit/morton.h>
 #include <mitsuba/mitsuba.h>
 #include <mitsuba/core/logger.h>
 #include <mitsuba/core/object.h>
@@ -10,7 +11,6 @@
 #include <mitsuba/render/texture.h>
 
 NAMESPACE_BEGIN(mitsuba)
-
 
 /**
  * \brief This list of flags is used to classify the different types of films.
@@ -49,7 +49,8 @@ MI_DECLARE_ENUM_OPERATORS(FilmFlags)
 template <typename Float, typename Spectrum>
 class MI_EXPORT_LIB Film : public Object {
 public:
-    MI_IMPORT_TYPES(ImageBlock, ReconstructionFilter, Texture)
+    // [MIS]: add of MIS Model type from `mitsuba/render/fwd.h`
+    MI_IMPORT_TYPES(ImageBlock, ReconstructionFilter, Texture, MISModel)
 
     /**
      * Configure the film for rendering a specified set of extra channels (AOVS).
@@ -195,6 +196,12 @@ public:
     void traverse(TraversalCallback *callback) override;
     void parameters_changed(const std::vector<std::string> &/*keys*/ = {}) override;
 
+    MISModel *get_mis_model(const Point2f &pos) const {
+        
+        uint32_t pos_int = dr::morton_encode<Point2u>(pos);
+        return mis_models[pos_int].get();
+    }
+
     //! @}
     // =============================================================
 
@@ -212,6 +219,9 @@ protected:
     uint32_t m_flags;
 
 protected:
+
+    std::vector<std::unique_ptr<MISModel>> mis_models;
+
     ScalarVector2u m_size;
     ScalarVector2u m_crop_size;
     ScalarPoint2u m_crop_offset;

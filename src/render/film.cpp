@@ -1,6 +1,7 @@
 #include <mitsuba/render/film.h>
 #include <mitsuba/core/plugin.h>
 #include <mitsuba/core/properties.h>
+#include <mitsuba/render/mis.h>
 
 NAMESPACE_BEGIN(mitsuba)
 
@@ -48,6 +49,14 @@ MI_VARIANT Film<Float, Spectrum>::Film(const Properties &props) : Object() {
         m_filter =
             PluginManager::instance()->create_object<ReconstructionFilter>(
                 Properties("gaussian"));
+
+    // [MIS] initialize the number of sampling data
+    for(uint32_t i = 0; i < crop_size.x() * crop_size.y(); i++) {
+
+        // [MIS] TODO specify the sampling method (factory: use of film property?)
+        auto div = std::make_unique<MISTsallis<Float, Spectrum>>(2);
+        mis_models.push_back(std::move(div));
+    }
 }
 
 MI_VARIANT Film<Float, Spectrum>::~Film() { }

@@ -68,6 +68,7 @@ public:
     std::pair<Spectrum, Mask> sample(const Scene *scene,
                                      Sampler * sampler,
                                      const RayDifferential3f &ray,
+                                     uint32_t sample_id,
                                      const Medium *medium,
                                      Float *aovs,
                                      Mask active) const override {
@@ -79,7 +80,7 @@ public:
 
         for (size_t i = 0; i < m_integrators.size(); i++) {
             std::pair<Spectrum, Mask> result_sub =
-                m_integrators[i].first->sample(scene, sampler, ray, medium, aovs, active);
+                m_integrators[i].first->sample(scene, sampler, ray, sample_id, medium, aovs, active);
             aovs += m_integrators[i].second;
 
             UnpolarizedSpectrum spec_u = unpolarized_spectrum(result_sub.first);

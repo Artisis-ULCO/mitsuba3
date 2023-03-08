@@ -104,6 +104,7 @@ public:
         if (m_emitter_samples + m_bsdf_samples == 0)
             Throw("Must have at least 1 BSDF or emitter sample!");
 
+        alpha         = 0.1;
         size_t sum    = m_emitter_samples + m_bsdf_samples;
         m_weight_bsdf = 1.f / (ScalarFloat) m_bsdf_samples;
         m_weight_lum  = 1.f / (ScalarFloat) m_emitter_samples;
@@ -114,6 +115,7 @@ public:
     std::pair<Spectrum, Mask> sample(const Scene *scene,
                                      Sampler *sampler,
                                      const RayDifferential3f &ray,
+                                     uint32_t sample_id,
                                      const Medium * /* medium */,
                                      Float * /* aovs */,
                                      Mask active) const override {
@@ -163,7 +165,7 @@ public:
                 auto [bsdf_val, bsdf_pdf] = bsdf->eval_pdf(ctx, si, wo, active_e);
                 bsdf_val = si.to_world_mueller(bsdf_val, -wo, si.wi);
 
-                Float mis = dr::select(ds.delta, Float(1.f), mis_weight(
+                Float mis = dr::select(ds.delta, Float(1.f), mis_weight_div(1 - alpha,
                     ds.pdf * m_frac_lum, bsdf_pdf * m_frac_bsdf) * m_weight_lum);
                 result[active_e] += mis * bsdf_val * emitter_val;
             }
@@ -199,7 +201,7 @@ public:
 
                 result[active_b] +=
                     bsdf_val * emitter_val *
-                    mis_weight(bs.pdf * m_frac_bsdf, emitter_pdf * m_frac_lum) *
+                    mis_weight_div(alpha, bs.pdf * m_frac_bsdf, emitter_pdf * m_frac_lum) *
                     m_weight_bsdf;
             }
         }
@@ -216,6 +218,11 @@ public:
         return oss.str();
     }
 
+    Float mis_weight_div(Float alpha, Float pdf_a, Float pdf_b) const {
+        Float w = (pdf_a * alpha) / (pdf_a * alpha + pdf_b * (1. - alpha));
+        return dr::select(dr::isfinite(w), w, 0.f);
+    }
+
     Float mis_weight(Float pdf_a, Float pdf_b) const {
         pdf_a *= pdf_a;
         pdf_b *= pdf_b;
@@ -229,6 +236,7 @@ private:
     size_t m_bsdf_samples;
     ScalarFloat m_frac_bsdf, m_frac_lum;
     ScalarFloat m_weight_bsdf, m_weight_lum;
+    ScalarFloat alpha;
 };
 
 MI_IMPLEMENT_CLASS_VARIANT(DirectIntegrator, SamplingIntegrator)

@@ -94,6 +94,7 @@ public:
     std::pair<Spectrum, Mask> sample(const Scene *scene,
                                      Sampler *sampler,
                                      const RayDifferential3f &ray_,
+                                     uint32_t sample_id,
                                      const Medium *initial_medium,
                                      Float * /* aovs */,
                                      Mask active) const override {
