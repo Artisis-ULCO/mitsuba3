@@ -18,7 +18,7 @@ public:
 
     Float get_alpha(uint32_t sampling_method_id) const;
 
-    void add_sampling_data(uint32_t sampling_method_id, 
+    virtual void add_sampling_data(uint32_t sampling_method_id, 
         const Spectrum &luminance, 
         const std::vector<Float> &pdfs); 
 
@@ -43,6 +43,7 @@ protected:
     std::map<uint32_t, Float> alphas;
     std::map<uint32_t, uint32_t> n_samples_methods;
     std::map<uint32_t, Float> luminance_sum;
+    std::map<uint32_t, Float> squared_sum;
     std::map<uint32_t, std::vector<Float>> pdf_sum;
 };
 
@@ -100,7 +101,8 @@ protected:
 template <typename Float, typename Spectrum>
 class MI_EXPORT_LIB MISLinear1 : public MISDivergence<Float, Spectrum> {
 
-    MI_IMPORT_BASE(MISDivergence, luminance_sum, pdf_sum, alphas)
+    MI_IMPORT_BASE(MISDivergence, luminance_sum, pdf_sum, n_samples_methods, 
+                squared_sum, alphas)
     MI_IMPORT_TYPES()
 
 public:

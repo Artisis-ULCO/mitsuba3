@@ -200,6 +200,10 @@ public:
     MISModel *get_mis_model(const Point2f &pos) const {
         
         size_t pos_index = pos.y() * m_crop_size.x() + pos.x();
+
+        // [MIS]: Debug
+        // std::cout << pos << std::endl;
+
         Assert(pos_index < mis_models.size()); 
         return mis_models[pos_index].get();
     }

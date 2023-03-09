@@ -14,10 +14,11 @@ MI_VARIANT MISModel<Float, Spectrum>::MISModel(uint32_t n_methods)
     for (uint32_t i = 0; i < n_methods; i++) {
 
         // init MIS data
-        n_samples_methods.insert({i, 0});
-        luminance_sum.insert({i, 0.});
-
-        auto methods_pdf_sum = std::vector<Float>(n_methods, 0.);
+        n_samples_methods.insert({i, 0.f});
+        luminance_sum.insert({i, 0.f});
+        squared_sum.insert({i, 0.f});
+    
+        auto methods_pdf_sum = std::vector<Float>(n_methods, 0.f);
         pdf_sum.insert({i, methods_pdf_sum});
     }
 
@@ -59,6 +60,9 @@ MI_VARIANT void MISModel<Float, Spectrum>::add_sampling_data(uint32_t sampling_m
 
     // increase number of sample for this method
     n_samples_methods[sampling_method_id] += 1;
+
+    Float mean_luminance = (luminance_sum[sampling_method_id] / n_samples_methods[sampling_method_id]);
+    squared_sum[sampling_method_id] += (mean_luminance - lum) * (mean_luminance - lum);
 
     // [MIS]: Debug
     // std::cout << "-----------------------------" << std::endl;
@@ -143,28 +147,49 @@ MI_VARIANT MISLinear1<Float, Spectrum>::MISLinear1(uint32_t n_methods) : Base(n_
 
 MI_VARIANT void MISLinear1<Float, Spectrum>::update_alphas() {
     // [MIS]: update alphas using first linear heuristic
-
-    Float f1 = luminance_sum[0];
-    Float f2 = luminance_sum[1];
-            
-    Float p11 = pdf_sum[0][0];
-    Float p12 = pdf_sum[0][1];
-    Float p21 = pdf_sum[1][0];
-    Float p22 = pdf_sum[1][1];
-
-    Float nominator = p21 * f2 - p22 * f1;
-    Float denominator = p12 * f1 - p22 * f1 - p11 * f2 + p21 * f2;
-
     Float eps = std::numeric_limits<Float>::epsilon();
+    Float f1 = (luminance_sum[0] / (n_samples_methods[0] + eps));
+    Float f2 = (luminance_sum[1] / (n_samples_methods[1] + eps));
+            
+    Float p11 = (pdf_sum[0][0] / (n_samples_methods[0] + eps));
+    Float p21 = (pdf_sum[0][1] / (n_samples_methods[0] + eps));
+    Float p12 = (pdf_sum[1][0] / (n_samples_methods[1] + eps));
+    Float p22 = (pdf_sum[1][1] / (n_samples_methods[1] + eps));
+
+    // Float f1 = luminance_sum[0];
+    // Float f2 = luminance_sum[1];
+            
+    // Float p11 = pdf_sum[0][0];
+    // Float p21 = pdf_sum[0][1];
+    // Float p12 = pdf_sum[1][0];
+    // Float p22 = pdf_sum[1][1];
+
+    Float nominator = p22 * f1 - p21 * f2;
+    Float denominator = p11 * f2 - p21 * f2 - p12 * f1 + p22 * f1;
+
+    // alpha[0] is for Emitter sampling 
+    // alpha[1] is for BSDF sampling
     alphas[0] = nominator / (denominator + eps);
 
-    if (alphas[0] <= 0)
-        alphas[0] = 0.01f;
+    // compute variances
+    std::vector<Float> variances;
 
-    if (alphas[0] >= 1)
-        alphas[0] = 0.99f;
+    for (uint32_t i = 0; i < this->n_methods; i++) {
+        variances.push_back(squared_sum[i] / (n_samples_methods[i] + eps));
+        // std::cout << "Method n°" << i << " has luminance variance of " << variances[i] << std::endl;
+    }
+
+    // if out of expected bounds then check contribution variance
+    if (alphas[0] <= 0 || alphas[0] >= 1)
+        alphas[0] = variances[0] >= variances[1] ? 0.99f : 0.01f;
         
     alphas[1] = 1.f - alphas[0];
+
+    // [MIS] Debug
+    // std::cout << "[Update] MIS has now alphas : [ ";
+    // for (uint32_t i = 0; i < this->n_methods; i++)
+    //     std::cout << alphas[i] << " ";
+    // std::cout << "]" << std::endl;
 }
 
 //! @}

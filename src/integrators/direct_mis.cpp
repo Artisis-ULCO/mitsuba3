@@ -166,8 +166,8 @@ public:
                 bsdf_val = si.to_world_mueller(bsdf_val, -wo, si.wi);
 
                 // [MIS]: Emitter / BSDF sampling
-                mis->add_sampling_data(0, bsdf_val * emitter_val, {ds.pdf, bsdf_pdf});
-                Float alpha = mis->get_alpha(0);
+                mis->add_sampling_data(1, bsdf_val * emitter_val, {bsdf_pdf, ds.pdf});
+                Float alpha = mis->get_alpha(1);
 
                 Float mis_w = dr::select(ds.delta, Float(1.f), mis->mis_weight(alpha,
                     ds.pdf * m_frac_lum, bsdf_pdf * m_frac_bsdf) * m_weight_lum);
@@ -204,8 +204,8 @@ public:
                     dr::select(delta, 0.f, scene->pdf_emitter_direction(si, ds, active_b));
 
                 // [MIS]: Emitter / BSDF sampling
-                mis->add_sampling_data(1, bsdf_val * emitter_val, {emitter_pdf, bs.pdf});
-                Float alpha = mis->get_alpha(1);
+                mis->add_sampling_data(0, bsdf_val * emitter_val, {bs.pdf, emitter_pdf});
+                Float alpha = mis->get_alpha(0);
 
                 result[active_b] +=
                     bsdf_val * emitter_val *
