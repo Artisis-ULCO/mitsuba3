@@ -73,8 +73,9 @@ class VolumetricPathIntegrator : public MonteCarloIntegrator<Float, Spectrum> {
 
 public:
     MI_IMPORT_BASE(MonteCarloIntegrator, m_max_depth, m_rr_depth, m_hide_emitters)
+    // [MIS]: add of MIS Model type from `mitsuba/render/fwd.h`
     MI_IMPORT_TYPES(Scene, Sampler, Emitter, EmitterPtr, BSDF, BSDFPtr,
-                     Medium, MediumPtr, PhaseFunctionContext)
+                     Medium, MediumPtr, PhaseFunctionContext, MISModel)
 
     VolumetricPathIntegrator(const Properties &props) : Base(props) {
     }
@@ -94,7 +95,7 @@ public:
     std::pair<Spectrum, Mask> sample(const Scene *scene,
                                      Sampler *sampler,
                                      const RayDifferential3f &ray_,
-                                     uint32_t sample_id,
+                                     MISModel* /* mis */,
                                      const Medium *initial_medium,
                                      Float * /* aovs */,
                                      Mask active) const override {

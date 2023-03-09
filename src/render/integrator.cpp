@@ -417,8 +417,7 @@ SamplingIntegrator<Float, Spectrum>::render_sample(const Scene *scene,
     const Medium *medium = sensor->medium();
 
     // TODO [MIS]: send to sample the MIS Model
-    uint32_t sample_id = 0;
-    auto [spec, valid] = sample(scene, sampler, ray, sample_id, medium,
+    auto [spec, valid] = sample(scene, sampler, ray, mis_model, medium,
                aovs + (has_alpha ? 5 : 4) /* skip R,G,B,[A],W */, active);
 
     UnpolarizedSpectrum spec_u = unpolarized_spectrum(ray_weight * spec);
@@ -457,7 +456,7 @@ MI_VARIANT std::pair<Spectrum, typename SamplingIntegrator<Float, Spectrum>::Mas
 SamplingIntegrator<Float, Spectrum>::sample(const Scene * /* scene */,
                                             Sampler * /* sampler */,
                                             const RayDifferential3f & /* ray */,
-                                            uint32_t,
+                                            MISModel * /* mis*/,
                                             const Medium * /* medium */,
                                             Float * /* aovs */,
                                             Mask /* active */) const {

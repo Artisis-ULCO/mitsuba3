@@ -52,7 +52,9 @@ ScopedSignalHandler::~ScopedSignalHandler() {
 /// Trampoline for derived types implemented in Python
 MI_VARIANT class PySamplingIntegrator : public SamplingIntegrator<Float, Spectrum> {
 public:
-    MI_IMPORT_TYPES(SamplingIntegrator, Scene, Sensor, Sampler, Medium, Emitter, EmitterPtr, BSDF, BSDFPtr)
+    // [MIS]: add of MIS Model type from `mitsuba/render/fwd.h`
+    MI_IMPORT_TYPES(SamplingIntegrator, Scene, Sensor, Sampler, Medium, Emitter, EmitterPtr, 
+                     BSDF, BSDFPtr, MISModel)
 
     PySamplingIntegrator(const Properties &props) : SamplingIntegrator(props) {
         if constexpr (!dr::is_jit_v<Float>) {
@@ -81,18 +83,17 @@ public:
     std::pair<Spectrum, Mask> sample(const Scene *scene,
                                      Sampler *sampler,
                                      const RayDifferential3f &ray,
-                                     uint32_t sample_id,
+                                     MISModel *mis,
                                      const Medium *medium,
                                      Float *aovs,
                                      Mask active) const override {
         py::gil_scoped_acquire gil;
         py::function sample_override = py::get_override(this, "sample");
 
-        uint32_t sampled_id = 0;
         if (sample_override) {
             using PyReturn = std::tuple<Spectrum, Mask, std::vector<Float>>;
             auto [spec, mask, aovs_] =
-                sample_override(scene, sampler, ray, medium, sample_id, active)
+                sample_override(scene, sampler, ray, mis, medium, active)
                     .template cast<PyReturn>();
 
             std::copy(aovs_.begin(), aovs_.end(), aovs);
@@ -132,7 +133,9 @@ MI_INSTANTIATE_CLASS(CppADIntegrator)
 
 MI_VARIANT class PyADIntegrator : public CppADIntegrator<Float, Spectrum> {
 public:
-    MI_IMPORT_TYPES(Scene, Sensor, Sampler, Medium, Emitter, EmitterPtr, BSDF, BSDFPtr)
+    
+    // [MIS]: add of MIS Model type from `mitsuba/render/fwd.h`
+    MI_IMPORT_TYPES(Scene, Sensor, Sampler, Medium, Emitter, EmitterPtr, BSDF, BSDFPtr, MISModel)
     using Base = CppADIntegrator<Float, Spectrum>;
 
     PyADIntegrator(const Properties &props) : Base(props) {
@@ -162,7 +165,7 @@ public:
     std::pair<Spectrum, Mask> sample(const Scene *scene,
                                      Sampler *sampler,
                                      const RayDifferential3f &ray,
-                                     uint32_t sample_id,
+                                     MISModel *mis,
                                      const Medium * /* unused */,
                                      Float * /* unused */,
                                      Mask active) const override {
@@ -177,7 +180,7 @@ public:
                 "scene"_a=scene,
                 "sampler"_a=sampler,
                 "ray"_a=ray,
-                "sample_id"_a=sample_id,
+                "mis"_a=mis,
                 "depth"_a=ray,
                 "δL"_a=py::none(),
                 "state_in"_a=py::none(),
@@ -243,14 +246,14 @@ MI_PY_EXPORT(Integrator) {
             "sample",
             [](const SamplingIntegrator *integrator, const Scene *scene,
                Sampler *sampler, const RayDifferential3f &ray,
-               const Medium *medium, uint32_t sample_id, Mask active) {
+               const Medium *medium, MISModel* mis, Mask active) {
                 py::gil_scoped_release release;
                 std::vector<Float> aovs(integrator->aov_names().size(), 0.f);
                 auto [spec, mask] = integrator->sample(
-                    scene, sampler, ray, sample_id, medium, aovs.data(), active);
+                    scene, sampler, ray, mis, medium, aovs.data(), active);
                 return std::make_tuple(spec, mask, aovs);
             },
-            "scene"_a, "sampler"_a, "ray"_a, "medium"_a = nullptr, "sample_id"_a = 0,
+            "scene"_a, "sampler"_a, "ray"_a, "mis"_a = nullptr, "medium"_a = nullptr,
             "active"_a = true, D(SamplingIntegrator, sample));
 
     MI_PY_REGISTER_OBJECT("register_integrator", Integrator)
@@ -263,5 +266,5 @@ MI_PY_EXPORT(Integrator) {
 
     MI_PY_CLASS(AdjointIntegrator, Integrator)
         .def_method(AdjointIntegrator, sample, "scene"_a, "sensor"_a,
-                    "sampler"_a, "block"_a, "sample_scale"_a, "sample_id"_a);
+                    "sampler"_a, "block"_a, "sample_scale"_a, "mis"_a);
 }

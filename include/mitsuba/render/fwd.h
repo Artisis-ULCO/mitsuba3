@@ -36,7 +36,10 @@ template <typename Float, typename Spectrum> class MeshAttribute;
 
 // [MIS]
 template <typename Float, typename Spectrum> class MISModel;
-template <typename Float, typename Spectrum> class MISTsallis;
+template <typename Float, typename Spectrum> class MISBalance;
+template <typename Float, typename Spectrum> class MISPower;
+template <typename Float, typename Spectrum> class MISDivergence;
+template <typename Float, typename Spectrum> class MISLinear1;
 
 template <typename Float, typename Spectrum> struct DirectionSample;
 template <typename Float, typename Spectrum> struct PositionSample;
@@ -104,7 +107,10 @@ template <typename Float_, typename Spectrum_> struct RenderAliases {
 
     // [MIS]
     using MISModel               = mitsuba::MISModel<FloatU, SpectrumU>;
-    using MISTsallis             = mitsuba::MISTsallis<FloatU, SpectrumU>;
+    using MISBalance             = mitsuba::MISBalance<FloatU, SpectrumU>;
+    using MISPower               = mitsuba::MISPower<FloatU, SpectrumU>;
+    using MISDivergence          = mitsuba::MISDivergence<FloatU, SpectrumU>;
+    using MISLinear1             = mitsuba::MISLinear1<FloatU, SpectrumU>;
 
     using ObjectPtr              = dr::replace_scalar_t<Float, const Object *>;
     using BSDFPtr                = dr::replace_scalar_t<Float, const BSDF *>;
@@ -177,7 +183,10 @@ template <typename Float_, typename Spectrum_> struct RenderAliases {
     using MonteCarloIntegrator   = typename RenderAliases::MonteCarloIntegrator;                   \
     using AdjointIntegrator      = typename RenderAliases::AdjointIntegrator;                      \
     using MISModel               = typename RenderAliases::MISModel;                               \
-    using MISTsallis             = typename RenderAliases::MISTsallis;                             \
+    using MISBalance             = typename RenderAliases::MISBalance;                             \
+    using MISPower               = typename RenderAliases::MISPower;                               \
+    using MISDivergence          = typename RenderAliases::MISDivergence;                          \
+    using MISLinear1             = typename RenderAliases::MISLinear1;                             \
     using BSDF                   = typename RenderAliases::BSDF;                                   \
     using OptixDenoiser          = typename RenderAliases::OptixDenoiser;                          \
     using Sensor                 = typename RenderAliases::Sensor;                                 \

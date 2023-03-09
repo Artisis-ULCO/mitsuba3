@@ -50,12 +50,26 @@ MI_VARIANT Film<Float, Spectrum>::Film(const Properties &props) : Object() {
             PluginManager::instance()->create_object<ReconstructionFilter>(
                 Properties("gaussian"));
 
+    // [MIS] get expected type
+    std::string mis_model_type = props.get<std::string>("mis", "power");
+
     // [MIS] initialize the number of sampling data
     for(uint32_t i = 0; i < crop_size.x() * crop_size.y(); i++) {
 
         // [MIS] TODO specify the sampling method (factory: use of film property?)
-        auto div = std::make_unique<MISTsallis<Float, Spectrum>>(2);
-        mis_models.push_back(std::move(div));
+        // Fixed n_methods currently
+        std::unique_ptr<MISModel> mis_div;
+        
+        if (mis_model_type == "balance")
+            mis_div = std::make_unique<MISBalance<Float, Spectrum>>(2);
+        else if (mis_model_type == "power")
+            mis_div = std::make_unique<MISPower<Float, Spectrum>>(2);
+        else if (mis_model_type == "linear1")
+            mis_div = std::make_unique<MISLinear1<Float, Spectrum>>(2);
+        else
+            mis_div = std::make_unique<MISPower<Float, Spectrum>>(2);
+
+        mis_models.push_back(std::move(mis_div));
     }
 }
 

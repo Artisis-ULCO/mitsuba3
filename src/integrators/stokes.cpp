@@ -67,7 +67,8 @@ template <typename Float, typename Spectrum>
 class StokesIntegrator final : public SamplingIntegrator<Float, Spectrum> {
 public:
     MI_IMPORT_BASE(SamplingIntegrator)
-    MI_IMPORT_TYPES(Scene, Sampler, Medium)
+    // [MIS]: add of MIS Model type from `mitsuba/render/fwd.h`
+    MI_IMPORT_TYPES(Scene, Sampler, Medium, MISModel)
 
     StokesIntegrator(const Properties &props) : Base(props) {
         if constexpr (!is_polarized_v<Spectrum>)
@@ -88,13 +89,13 @@ public:
     std::pair<Spectrum, Mask> sample(const Scene *scene,
                                      Sampler * sampler,
                                      const RayDifferential3f &ray,
-                                     uint32_t sample_id,
+                                     MISModel *mis,
                                      const Medium *medium,
                                      Float *aovs,
                                      Mask active) const override {
         MI_MASKED_FUNCTION(ProfilerPhase::SamplingIntegratorSample, active);
 
-        auto [spec, mask] = m_integrator->sample(scene, sampler, ray, sample_id, medium, aovs + 12, active);
+        auto [spec, mask] = m_integrator->sample(scene, sampler, ray, mis, medium, aovs + 12, active);
 
         if constexpr (is_polarized_v<Spectrum>) {
             /* The Stokes vector that comes from the integrator is still aligned

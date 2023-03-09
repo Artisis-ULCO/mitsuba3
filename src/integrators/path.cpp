@@ -88,14 +88,15 @@ template <typename Float, typename Spectrum>
 class PathIntegrator : public MonteCarloIntegrator<Float, Spectrum> {
 public:
     MI_IMPORT_BASE(MonteCarloIntegrator, m_max_depth, m_rr_depth, m_hide_emitters)
-    MI_IMPORT_TYPES(Scene, Sampler, Medium, Emitter, EmitterPtr, BSDF, BSDFPtr)
+    // [MIS]: add of MIS Model type from `mitsuba/render/fwd.h`
+    MI_IMPORT_TYPES(Scene, Sampler, Medium, Emitter, EmitterPtr, BSDF, BSDFPtr, MISModel)
 
     PathIntegrator(const Properties &props) : Base(props) { }
 
     std::pair<Spectrum, Bool> sample(const Scene *scene,
                                      Sampler *sampler,
                                      const RayDifferential3f &ray_,
-                                     uint32_t sample_id,
+                                     MISModel* /* mis */,
                                      const Medium * /* medium */,
                                      Float * /* aovs */,
                                      Bool active) const override {

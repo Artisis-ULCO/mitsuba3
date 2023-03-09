@@ -41,7 +41,8 @@ template <typename Float, typename Spectrum>
 class MomentIntegrator final : public SamplingIntegrator<Float, Spectrum> {
 public:
     MI_IMPORT_BASE(SamplingIntegrator)
-    MI_IMPORT_TYPES(Scene, Sampler, Medium)
+    // [MIS]: add of MIS Model type from `mitsuba/render/fwd.h`
+    MI_IMPORT_TYPES(Scene, Sampler, Medium, MISModel)
 
     MomentIntegrator(const Properties &props) : Base(props) {
         // Get the nested integrators and their AOVs
@@ -68,7 +69,7 @@ public:
     std::pair<Spectrum, Mask> sample(const Scene *scene,
                                      Sampler * sampler,
                                      const RayDifferential3f &ray,
-                                     uint32_t sample_id,
+                                     MISModel *mis,
                                      const Medium *medium,
                                      Float *aovs,
                                      Mask active) const override {
@@ -80,7 +81,7 @@ public:
 
         for (size_t i = 0; i < m_integrators.size(); i++) {
             std::pair<Spectrum, Mask> result_sub =
-                m_integrators[i].first->sample(scene, sampler, ray, sample_id, medium, aovs, active);
+                m_integrators[i].first->sample(scene, sampler, ray, mis, medium, aovs, active);
             aovs += m_integrators[i].second;
 
             UnpolarizedSpectrum spec_u = unpolarized_spectrum(result_sub.first);

@@ -6,6 +6,7 @@
 #include <mitsuba/core/object.h>
 #include <mitsuba/core/rfilter.h>
 #include <mitsuba/core/vector.h>
+#include <mitsuba/render/mis.h>
 #include <mitsuba/render/sampler.h>
 #include <mitsuba/render/fwd.h>
 #include <mitsuba/render/texture.h>
@@ -198,8 +199,9 @@ public:
 
     MISModel *get_mis_model(const Point2f &pos) const {
         
-        uint32_t pos_int = dr::morton_encode<Point2u>(pos);
-        return mis_models[pos_int].get();
+        size_t pos_index = pos.y() * m_crop_size.x() + pos.x();
+        Assert(pos_index < mis_models.size()); 
+        return mis_models[pos_index].get();
     }
 
     //! @}

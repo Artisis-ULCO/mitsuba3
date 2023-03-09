@@ -9,8 +9,8 @@ NAMESPACE_BEGIN(mitsuba)
 
 .. _integrator-direct:
 
-Direct illumination integrator (:monosp:`direct`)
--------------------------------------------------
+Direct illumination integrator (:monosp:`direct`) with custom MIS
+-----------------------------------------------------------------
 
 .. pluginparameters::
 
@@ -69,7 +69,7 @@ or BSDF sampling-only integrator.
     .. code-tab::  xml
         :name: direct-integrator
 
-        <integrator type="direct"/>
+        <integrator type="directmis"/>
 
     .. code-tab:: python
 
@@ -78,13 +78,13 @@ or BSDF sampling-only integrator.
  */
 
 template <typename Float, typename Spectrum>
-class DirectIntegrator : public SamplingIntegrator<Float, Spectrum> {
+class DirectIntegratorMIS : public SamplingIntegrator<Float, Spectrum> {
 public:
     MI_IMPORT_BASE(SamplingIntegrator, m_hide_emitters)
     // [MIS]: add of MIS Model type from `mitsuba/render/fwd.h`
     MI_IMPORT_TYPES(Scene, Sampler, Medium, Emitter, EmitterPtr, BSDF, BSDFPtr, MISModel)
 
-    DirectIntegrator(const Properties &props) : Base(props) {
+    DirectIntegratorMIS(const Properties &props) : Base(props) {
         if (props.has_property("shading_samples")
             && (props.has_property("emitter_samples") ||
                 props.has_property("bsdf_samples"))) {
@@ -115,7 +115,7 @@ public:
     std::pair<Spectrum, Mask> sample(const Scene *scene,
                                      Sampler *sampler,
                                      const RayDifferential3f &ray,
-                                     MISModel * /* mis */,
+                                     MISModel *mis,
                                      const Medium * /* medium */,
                                      Float * /* aovs */,
                                      Mask active) const override {
@@ -165,9 +165,13 @@ public:
                 auto [bsdf_val, bsdf_pdf] = bsdf->eval_pdf(ctx, si, wo, active_e);
                 bsdf_val = si.to_world_mueller(bsdf_val, -wo, si.wi);
 
-                Float mis = dr::select(ds.delta, Float(1.f), mis_weight(
+                // [MIS]: Emitter / BSDF sampling
+                mis->add_sampling_data(0, bsdf_val * emitter_val, {ds.pdf, bsdf_pdf});
+                Float alpha = mis->get_alpha(0);
+
+                Float mis_w = dr::select(ds.delta, Float(1.f), mis->mis_weight(alpha,
                     ds.pdf * m_frac_lum, bsdf_pdf * m_frac_bsdf) * m_weight_lum);
-                result[active_e] += mis * bsdf_val * emitter_val;
+                result[active_e] += mis_w * bsdf_val * emitter_val;
             }
         }
 
@@ -199,12 +203,21 @@ public:
                 Float emitter_pdf =
                     dr::select(delta, 0.f, scene->pdf_emitter_direction(si, ds, active_b));
 
+                // [MIS]: Emitter / BSDF sampling
+                mis->add_sampling_data(1, bsdf_val * emitter_val, {emitter_pdf, bs.pdf});
+                Float alpha = mis->get_alpha(1);
+
                 result[active_b] +=
                     bsdf_val * emitter_val *
-                    mis_weight(bs.pdf * m_frac_bsdf, emitter_pdf * m_frac_lum) *
+                    mis->mis_weight(alpha, bs.pdf * m_frac_bsdf, emitter_pdf * m_frac_lum) *
                     m_weight_bsdf;
             }
         }
+
+        // [MIS]: update alphas and number of samples
+        // TODO: can be improved
+        mis->update_alphas();
+        mis->update_n_samples();
 
         return { result, valid_ray };
     }
@@ -218,13 +231,6 @@ public:
         return oss.str();
     }
 
-    Float mis_weight(Float pdf_a, Float pdf_b) const {
-        pdf_a *= pdf_a;
-        pdf_b *= pdf_b;
-        Float w = pdf_a / (pdf_a + pdf_b);
-        return dr::select(dr::isfinite(w), w, 0.f);
-    }
-
     MI_DECLARE_CLASS()
 private:
     size_t m_emitter_samples;
@@ -233,6 +239,6 @@ private:
     ScalarFloat m_weight_bsdf, m_weight_lum;
 };
 
-MI_IMPLEMENT_CLASS_VARIANT(DirectIntegrator, SamplingIntegrator)
-MI_EXPORT_PLUGIN(DirectIntegrator, "Direct integrator");
+MI_IMPLEMENT_CLASS_VARIANT(DirectIntegratorMIS, SamplingIntegrator)
+MI_EXPORT_PLUGIN(DirectIntegratorMIS, "Direct integrator MIS");
 NAMESPACE_END(mitsuba)
