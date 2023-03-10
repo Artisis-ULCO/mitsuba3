@@ -39,6 +39,9 @@ MI_VARIANT void MISModel<Float, Spectrum>::update_n_samples() {
     n_samples++;
 }
 
+MI_VARIANT uint32_t MISModel<Float, Spectrum>::number_of_methods() const {
+    return n_methods;
+}
 
 MI_VARIANT Float MISModel<Float, Spectrum>::get_alpha(uint32_t sampling_method_id) const {
     return alphas.at(sampling_method_id);

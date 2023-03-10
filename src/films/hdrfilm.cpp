@@ -3,11 +3,16 @@
 #include <mitsuba/core/fstream.h>
 #include <mitsuba/core/spectrum.h>
 #include <mitsuba/core/string.h>
+#include <mitsuba/render/mis.h>
 #include <mitsuba/render/film.h>
 #include <mitsuba/render/fwd.h>
 #include <mitsuba/render/imageblock.h>
 
 #include <mutex>
+#include <sys/stat.h>
+#include <algorithm>
+#include <cstring>
+#include <fstream>
 
 NAMESPACE_BEGIN(mitsuba)
 
@@ -136,7 +141,8 @@ class HDRFilm final : public Film<Float, Spectrum> {
 public:
     MI_IMPORT_BASE(Film, m_size, m_crop_size, m_crop_offset, m_sample_border,
                    m_filter, m_flags)
-    MI_IMPORT_TYPES(ImageBlock)
+    // [MIS]: add of MIS Model type from `mitsuba/render/fwd.h`
+    MI_IMPORT_TYPES(ImageBlock, MISModel)
 
     HDRFilm(const Properties &props) : Base(props) {
         std::string file_format = string::to_lower(
@@ -564,6 +570,38 @@ public:
         } else {
             source->write(filename, m_file_format);
         }
+
+        // [MIS] write alpha map there
+        std::string filename_str = filename.native();
+        std::string::size_type ext = filename_str.find(".");
+        std::string prefix = filename_str.substr(0, ext);
+        std::string mapFilename = prefix + ".map";
+
+        std::ofstream file;
+        file.open(mapFilename);
+
+        for (uint32_t j = 0; j < m_crop_size.y(); j++) {
+            for (uint32_t i = 0; i < m_crop_size.x(); i++) {
+                
+                auto pos_f = Point2f(i, j);
+                MISModel* mis_model = this->get_mis_model(pos_f);
+                
+                for (uint32_t m_i = 0; m_i < mis_model->number_of_methods(); m_i++) {
+                    Float alpha = mis_model->get_alpha(m_i);
+                    file << alpha;
+                    
+                    if (m_i < mis_model->number_of_methods() - 1)
+                        file << ",";
+                }
+                
+                file << ";";
+            }
+
+            file << std::endl;
+        }
+
+        file.close();
+        std::cout << "AlphaMap saved into: " << mapFilename << std::endl;
     }
 
     void schedule_storage() override {

@@ -16,6 +16,8 @@ public:
 
     void update_n_samples();
 
+    uint32_t number_of_methods() const;
+
     Float get_alpha(uint32_t sampling_method_id) const;
 
     virtual void add_sampling_data(uint32_t sampling_method_id, 
