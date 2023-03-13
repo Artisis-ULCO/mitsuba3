@@ -329,7 +329,7 @@ public:
      */
     virtual void sample(const Scene *scene, const Sensor *sensor,
                         Sampler *sampler, ImageBlock *block,
-                        ScalarFloat sample_scale, uint32_t sample_id) const = 0;
+                        ScalarFloat sample_scale) const = 0;
 
     // =========================================================================
     //! @{ \name Integrator interface implementation

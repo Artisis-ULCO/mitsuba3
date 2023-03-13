@@ -71,7 +71,7 @@ MI_VARIANT Film<Float, Spectrum>::Film(const Properties &props) : Object() {
         else if (mis_model_type == "linear3")
             mis_div = std::make_unique<MISLinear3<Float, Spectrum>>(2);
         else if (mis_model_type == "tsallis") {
-            Float gamma = props.get<Float>("gamma", 1.f);
+            Float gamma = props.get<float>("gamma", 1.f);
             uint32_t batch_samples = props.get<uint32_t>("batch", 10);
             mis_div = std::make_unique<MISTsallis<Float, Spectrum>>(2, gamma, batch_samples);
         }

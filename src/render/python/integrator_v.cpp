@@ -245,8 +245,8 @@ MI_PY_EXPORT(Integrator) {
         .def(
             "sample",
             [](const SamplingIntegrator *integrator, const Scene *scene,
-               Sampler *sampler, const RayDifferential3f &ray,
-               const Medium *medium, MISModel* mis, Mask active) {
+               Sampler *sampler, const RayDifferential3f &ray,  MISModel* mis,
+               const Medium *medium, Mask active) {
                 py::gil_scoped_release release;
                 std::vector<Float> aovs(integrator->aov_names().size(), 0.f);
                 auto [spec, mask] = integrator->sample(
@@ -266,5 +266,5 @@ MI_PY_EXPORT(Integrator) {
 
     MI_PY_CLASS(AdjointIntegrator, Integrator)
         .def_method(AdjointIntegrator, sample, "scene"_a, "sensor"_a,
-                    "sampler"_a, "block"_a, "sample_scale"_a, "mis"_a);
+                    "sampler"_a, "block"_a, "sample_scale"_a);
 }

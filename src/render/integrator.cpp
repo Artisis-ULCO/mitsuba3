@@ -610,7 +610,7 @@ AdjointIntegrator<Float, Spectrum>::render(Scene *scene,
 
                 size_t ctr = 0;
                 for (auto i = range.begin(); i != range.end() && !should_stop(); ++i) {
-                    sample(scene, sensor, sampler, block, sample_scale, i);
+                    sample(scene, sensor, sampler, block, sample_scale);
                     sampler->advance();
 
                     ctr++;

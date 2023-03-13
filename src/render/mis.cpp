@@ -1,3 +1,6 @@
+#include <mutex>
+
+#include <drjit/morton.h>
 #include <mitsuba/render/mis.h>
 
 #include <limits>
@@ -184,8 +187,9 @@ MI_VARIANT void MISLinear1<Float, Spectrum>::update_alphas() {
     }
 
     // if out of expected bounds then check contribution variance
-    if (alphas[0] <= 0 || alphas[0] >= 1)
-        alphas[0] = variances[0] >= variances[1] ? 0.99f : 0.01f;
+    auto check_alpha = (alphas.at(0) <= 0) or (alphas.at(0) >= 1);
+    if (dr::any_or<true>(check_alpha))
+        alphas[0] = dr::any_or<true>(variances.at(0) >= variances.at(1)) ? 0.99f : 0.01f;
         
     alphas[1] = 1.f - alphas[0];
 
@@ -238,8 +242,9 @@ MI_VARIANT void MISLinear2<Float, Spectrum>::update_alphas() {
     }
 
     // if out of expected bounds then check contribution variance
-    if (alphas[0] <= 0 || alphas[0] >= 1)
-        alphas[0] = variances[0] >= variances[1] ? 0.99f : 0.01f;
+    auto check_alpha = (alphas.at(0) <= 0) or (alphas.at(0) >= 1);
+    if (dr::any_or<true>(check_alpha))
+        alphas[0] = dr::any_or<true>(variances.at(0) >= variances.at(1)) ? 0.99f : 0.01f;
         
     alphas[1] = 1.f - alphas[0];
 
@@ -336,8 +341,9 @@ MI_VARIANT void MISLinear3<Float, Spectrum>::update_alphas() {
     }
 
     // if out of expected bounds then check contribution variance
-    if (alphas[0] <= 0 || alphas[0] >= 1)
-        alphas[0] = variances[0] >= variances[1] ? 0.99f : 0.01f;
+    auto check_alpha = (alphas.at(0) <= 0) or (alphas.at(0) >= 1);
+    if (dr::any_or<true>(check_alpha))
+        alphas[0] = dr::any_or<true>(variances.at(0) >= variances.at(1)) ? 0.99f : 0.01f;
         
     alphas[1] = 1.f - alphas[0];
 
@@ -410,20 +416,20 @@ MI_VARIANT void MISTsallis<Float, Spectrum>::add_sampling_data(uint32_t sampling
     Float g_pdf = pdfs.at(1);
 
     // Compute xi_sum and xi_prime_sum
-    Float lum_tsallis = std::pow(lum, gamma);
+    Float lum_tsallis = dr::pow(lum, gamma);
 
     // [MIS]: update xi and xi' with respect to equations 30-31
-    Float alpha_probs = alphas.at(0) * f_pdf + alphas.at(1) * g_pdf;
+    Float alpha_probs = alphas[0] * f_pdf + alphas[1] * g_pdf;
 
     // check not null value
-    if (alpha_probs <= 0)
+    if (dr::any_or<true>(alpha_probs <= 0.f))
         alpha_probs += std::numeric_limits<Float>::epsilon();
 
-    xi_sum += (lum_tsallis / std::pow(alpha_probs, gamma + 1)) 
+    xi_sum += (lum_tsallis / dr::pow(alpha_probs, gamma + 1.f)) 
                     * (f_pdf - g_pdf);
 
-    xi_prime_sum += (lum_tsallis / std::pow(alpha_probs, gamma + 2)) 
-                    * (std::pow(f_pdf - g_pdf, 2));
+    xi_prime_sum += (lum_tsallis / dr::pow(alpha_probs, gamma + 2.f)) 
+                    * (dr::detail::powi(f_pdf - g_pdf, 2));
 }   
 
 MI_VARIANT void MISTsallis<Float, Spectrum>::update_alphas() {
@@ -441,7 +447,7 @@ MI_VARIANT void MISTsallis<Float, Spectrum>::update_alphas() {
 
     Float xi_prime_alpha = xi_prime_sum * (-gamma / batch_samples);
 
-    if (xi_prime_alpha <= 0)
+    if (dr::any_or<true>(xi_prime_alpha <= 0))
         xi_prime_alpha += eps;
 
     // std::cout << " -- Current alpha: " << alphas[0] << std::endl;
@@ -464,8 +470,9 @@ MI_VARIANT void MISTsallis<Float, Spectrum>::update_alphas() {
         variances.push_back(squared_sum[i] / (n_samples_methods[i] + eps));
 
     // if out of expected bounds then check contribution variance
-    if (alphas[0] <= 0 || alphas[0] >= 1)
-        alphas[0] = variances[0] >= variances[1] ? 0.99f : 0.01f;
+    auto check_alpha = (alphas.at(0) <= 0) or (alphas.at(0) >= 1);
+    if (dr::any_or<true>(check_alpha))
+        alphas[0] = dr::any_or<true>(variances.at(0) >= variances.at(1)) ? 0.99f : 0.01f;
         
     // std::cout << " -- Real new Alpha MIS: " << alphas[0] << std::endl;
     alphas[1] = 1.f - alphas[0];
