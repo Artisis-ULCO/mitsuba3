@@ -176,7 +176,6 @@ public:
         }
 
         // ------------------------ BSDF sampling -------------------------
-
         for (size_t i = 0; i < m_bsdf_samples; ++i) {
             auto [bs, bsdf_val] = bsdf->sample(ctx, si, sampler->next_1d(active),
                                                sampler->next_2d(active), active);
@@ -216,8 +215,8 @@ public:
 
         // [MIS]: update alphas and number of samples
         // TODO: can be improved
-        mis->update_alphas();
         mis->update_n_samples();
+        mis->update_alphas();
 
         return { result, valid_ray };
     }

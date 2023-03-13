@@ -575,10 +575,10 @@ public:
         std::string filename_str = filename.native();
         std::string::size_type ext = filename_str.find(".");
         std::string prefix = filename_str.substr(0, ext);
-        std::string mapFilename = prefix + ".map";
+        std::string map_filename = prefix + ".map";
 
-        std::ofstream file;
-        file.open(mapFilename);
+        std::ofstream map_file;
+        map_file.open(map_filename);
 
         for (uint32_t j = 0; j < m_crop_size.y(); j++) {
             for (uint32_t i = 0; i < m_crop_size.x(); i++) {
@@ -588,20 +588,18 @@ public:
                 
                 for (uint32_t m_i = 0; m_i < mis_model->number_of_methods(); m_i++) {
                     Float alpha = mis_model->get_alpha(m_i);
-                    file << alpha;
+                    map_file << alpha;
                     
                     if (m_i < mis_model->number_of_methods() - 1)
-                        file << ",";
-                }
-                
-                file << ";";
+                        map_file << ",";
+                }   
+                map_file << ";";
             }
-
-            file << std::endl;
+            map_file << std::endl;
         }
 
-        file.close();
-        std::cout << "AlphaMap saved into: " << mapFilename << std::endl;
+        map_file.close();
+        std::cout << "AlphaMap saved into: " << map_filename << std::endl;
     }
 
     void schedule_storage() override {

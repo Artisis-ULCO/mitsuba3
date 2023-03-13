@@ -40,6 +40,9 @@ template <typename Float, typename Spectrum> class MISBalance;
 template <typename Float, typename Spectrum> class MISPower;
 template <typename Float, typename Spectrum> class MISDivergence;
 template <typename Float, typename Spectrum> class MISLinear1;
+template <typename Float, typename Spectrum> class MISLinear2;
+template <typename Float, typename Spectrum> class MISLinear3;
+template <typename Float, typename Spectrum> class MISTsallis;
 
 template <typename Float, typename Spectrum> struct DirectionSample;
 template <typename Float, typename Spectrum> struct PositionSample;
@@ -111,6 +114,9 @@ template <typename Float_, typename Spectrum_> struct RenderAliases {
     using MISPower               = mitsuba::MISPower<FloatU, SpectrumU>;
     using MISDivergence          = mitsuba::MISDivergence<FloatU, SpectrumU>;
     using MISLinear1             = mitsuba::MISLinear1<FloatU, SpectrumU>;
+    using MISLinear2             = mitsuba::MISLinear2<FloatU, SpectrumU>;
+    using MISLinear3             = mitsuba::MISLinear3<FloatU, SpectrumU>;
+    using MISTsallis             = mitsuba::MISTsallis<FloatU, SpectrumU>;
 
     using ObjectPtr              = dr::replace_scalar_t<Float, const Object *>;
     using BSDFPtr                = dr::replace_scalar_t<Float, const BSDF *>;
@@ -187,6 +193,9 @@ template <typename Float_, typename Spectrum_> struct RenderAliases {
     using MISPower               = typename RenderAliases::MISPower;                               \
     using MISDivergence          = typename RenderAliases::MISDivergence;                          \
     using MISLinear1             = typename RenderAliases::MISLinear1;                             \
+    using MISLinear2             = typename RenderAliases::MISLinear2;                             \
+    using MISLinear3             = typename RenderAliases::MISLinear3;                             \
+    using MISTsallis             = typename RenderAliases::MISTsallis;                             \
     using BSDF                   = typename RenderAliases::BSDF;                                   \
     using OptixDenoiser          = typename RenderAliases::OptixDenoiser;                          \
     using Sensor                 = typename RenderAliases::Sensor;                                 \
