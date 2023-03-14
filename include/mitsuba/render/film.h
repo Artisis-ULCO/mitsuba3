@@ -198,7 +198,8 @@ public:
 
     MISModel *get_mis_model(const Point2f &pos) const {
         
-        uint32_t pos_index = (uint32_t) dr::slice(pos.y() * m_crop_size.x() + pos.x());
+        // uint32_t pos_index = (uint32_t) dr::slice(pos.y() * m_crop_size.x() + pos.x(), 0);
+        uint32_t pos_index = pos.y() * m_crop_size.x() + pos.x();
         // [MIS]: Debug
         // std::cout << pos << std::endl;
 
@@ -218,6 +219,8 @@ protected:
 
     /// Virtual destructor
     virtual ~Film();
+
+    void init_mis_model();
 
     /// Combined flags for all properties of this film.
     uint32_t m_flags;

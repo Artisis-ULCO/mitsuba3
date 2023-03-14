@@ -52,14 +52,25 @@ MI_VARIANT Film<Float, Spectrum>::Film(const Properties &props) : Object() {
 
     // [MIS] get expected type
     mis_model_type = props.get<std::string>("mis", "power");
+    mis_gamma = props.get<float>("gamma", 1.f);
+    mis_batch_samples = props.get<uint32_t>("batch", 10);
+
+    init_mis_model();
+}
+
+MI_VARIANT Film<Float, Spectrum>::~Film() { }
+
+// [MIS]: common reinit function
+MI_VARIANT void Film<Float, Spectrum>::init_mis_model() {
+
+    mis_models.clear();
 
     // [MIS] initialize the number of sampling data
-    for(uint32_t i = 0; i < crop_size.x() * crop_size.y(); i++) {
+    for(uint32_t i = 0; i < m_crop_size.x() * m_crop_size.y(); i++) {
 
-        // [MIS] TODO specify the sampling method (factory: use of film property?)
         // Fixed n_methods currently
         std::unique_ptr<MISModel> mis_div;
-        
+
         if (mis_model_type == "balance")
             mis_div = std::make_unique<MISBalance<Float, Spectrum>>(2);
         else if (mis_model_type == "power")
@@ -70,19 +81,14 @@ MI_VARIANT Film<Float, Spectrum>::Film(const Properties &props) : Object() {
             mis_div = std::make_unique<MISLinear2<Float, Spectrum>>(2);
         else if (mis_model_type == "linear3")
             mis_div = std::make_unique<MISLinear3<Float, Spectrum>>(2);
-        else if (mis_model_type == "tsallis") {
-            mis_gamma = props.get<float>("gamma", 1.f);
-            mis_batch_samples = props.get<uint32_t>("batch", 10);
+        else if (mis_model_type == "tsallis")
             mis_div = std::make_unique<MISTsallis<Float, Spectrum>>(2, mis_gamma, mis_batch_samples);
-        }
         else
             mis_div = std::make_unique<MISPower<Float, Spectrum>>(2);
 
         mis_models.push_back(std::move(mis_div));
     }
 }
-
-MI_VARIANT Film<Float, Spectrum>::~Film() { }
 
 MI_VARIANT void Film<Float, Spectrum>::traverse(TraversalCallback *callback) {
     callback->put_parameter("size", m_size, +ParamFlags::NonDifferentiable);
@@ -105,6 +111,10 @@ MI_VARIANT void Film<Float, Spectrum>::parameters_changed(const std::vector<std:
             crop_size = ScalarPoint2u(m_size);
         if (!string::contains(keys, "crop_offset"))
             crop_offset = 0;
+    }
+
+    if (string::contains(keys, "mis_model_type")) {
+        init_mis_model();
     }
 
     set_crop_window(crop_offset, crop_size);
