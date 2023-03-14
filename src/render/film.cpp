@@ -51,7 +51,7 @@ MI_VARIANT Film<Float, Spectrum>::Film(const Properties &props) : Object() {
                 Properties("gaussian"));
 
     // [MIS] get expected type
-    std::string mis_model_type = props.get<std::string>("mis", "power");
+    mis_model_type = props.get<std::string>("mis", "power");
 
     // [MIS] initialize the number of sampling data
     for(uint32_t i = 0; i < crop_size.x() * crop_size.y(); i++) {
@@ -71,9 +71,9 @@ MI_VARIANT Film<Float, Spectrum>::Film(const Properties &props) : Object() {
         else if (mis_model_type == "linear3")
             mis_div = std::make_unique<MISLinear3<Float, Spectrum>>(2);
         else if (mis_model_type == "tsallis") {
-            Float gamma = props.get<float>("gamma", 1.f);
-            uint32_t batch_samples = props.get<uint32_t>("batch", 10);
-            mis_div = std::make_unique<MISTsallis<Float, Spectrum>>(2, gamma, batch_samples);
+            mis_gamma = props.get<float>("gamma", 1.f);
+            mis_batch_samples = props.get<uint32_t>("batch", 10);
+            mis_div = std::make_unique<MISTsallis<Float, Spectrum>>(2, mis_gamma, mis_batch_samples);
         }
         else
             mis_div = std::make_unique<MISPower<Float, Spectrum>>(2);
@@ -88,6 +88,11 @@ MI_VARIANT void Film<Float, Spectrum>::traverse(TraversalCallback *callback) {
     callback->put_parameter("size", m_size, +ParamFlags::NonDifferentiable);
     callback->put_parameter("crop_size", m_crop_size, +ParamFlags::NonDifferentiable);
     callback->put_parameter("crop_offset", m_crop_offset, +ParamFlags::NonDifferentiable);
+
+    // [MIS]
+    callback->put_parameter("mis_model_type", mis_model_type, +ParamFlags::NonDifferentiable);
+    callback->put_parameter("mis_batch", mis_batch_samples, +ParamFlags::NonDifferentiable);
+    callback->put_parameter("mis_gamma", mis_gamma, +ParamFlags::NonDifferentiable);
 }
 
 MI_VARIANT void Film<Float, Spectrum>::parameters_changed(const std::vector<std::string> &keys) {

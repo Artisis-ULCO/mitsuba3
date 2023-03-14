@@ -223,12 +223,16 @@ protected:
     uint32_t m_flags;
 
 protected:
-
+    // [MIS]
+    std::string mis_model_type;
+    uint32_t mis_batch_samples;
+    Float mis_gamma;
     std::vector<std::unique_ptr<MISModel>> mis_models;
 
     ScalarVector2u m_size;
     ScalarVector2u m_crop_size;
     ScalarPoint2u m_crop_offset;
+
     bool m_sample_border;
     ref<ReconstructionFilter> m_filter;
     ref<Texture> m_srf;
