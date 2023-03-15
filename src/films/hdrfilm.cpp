@@ -593,7 +593,8 @@ public:
                     if (m_i < mis_model->number_of_methods() - 1)
                         map_file << ",";
                 }   
-                map_file << ";";
+                if (i < m_crop_size.x() - 1)
+                    map_file << ";";
             }
             map_file << std::endl;
         }

@@ -8,6 +8,7 @@
 
 # Jupyter
 /.ipynb_checkpoints
+/.python-version
 
 # Python
 __pycache__
