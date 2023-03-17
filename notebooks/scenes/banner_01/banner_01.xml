@@ -1,0 +1,1826 @@
+<?xml version="1.0" ?><scene version="3.0.0">
+
+<!-- Defaults, these can be set via the command line: -Darg=value -->
+
+	<default name="spp" value="10"/>
+	<default name="resx" value="10"/>
+	<default name="resy" value="5"/>
+	<!-- <default name="resx" value="1920"/>
+	<default name="resy" value="720"/> -->
+	<default name="max_depth" value="3"/>
+
+<!-- Camera and Rendering Parameters -->
+
+	<integrator type="pathgnn">
+		<integer name="max_depth" value="$max_depth"/>
+		<!-- <boolean name="hide_emitters" value="True"/> -->
+	</integrator>
+
+	<sensor type="perspective">
+		<string name="fov_axis" value="x"/>
+		<float name="fov" value="23.913168"/>
+		<float name="near_clip" value="0.100000"/>
+		<float name="far_clip" value="1000.000000"/>
+		<transform name="to_world">
+			<rotate x="1" angle="179.999991348578"/>
+			<rotate y="1" angle="5.008956130975331e-06"/>
+			<rotate z="1" angle="180.00000500895632"/>
+			<translate value="-0.081774 0.051525 16.190189"/>
+		</transform>
+		<sampler type="independent">
+			<integer name="sample_count" value="$spp"/>
+		</sampler>
+		<film type="hdrfilm">
+			<integer name="width" value="$resx"/>
+			<integer name="height" value="$resy"/>
+		</film>
+	</sensor>
+
+<!-- Materials -->
+
+	<bsdf type="twosided" id="mat-Floor">
+		<bsdf type="principled">
+			<rgb value="0.202354 0.55000 0.154035" name="base_color"/>
+			<float name="specular" value="0.500000"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.500000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Particles">
+		<bsdf type="principled">
+			<rgb value="0.800000 0.800000 0.800000" name="base_color"/>
+			<float name="specular" value="0.500000"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.500000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="null" id="mat-Leaf"/>
+
+    <medium id="medium1" type="homogeneous">
+        <float name="scale" value="50"/>
+        <phase type="hg">
+			<float name="g" value="0.4"/>
+		</phase>
+
+        <volume name="sigma_t" type="constvolume">
+            <float name="value" value="0.95"/>
+        </volume>
+        <volume name="albedo" type="constvolume">
+            <rgb name="value" value="0.3, 0.76, 0.3"/>
+        </volume>
+        <!-- <boolean name="sample_emitters" value="false"/> -->
+    </medium>
+
+<!-- Emitters -->
+
+	<shape type="rectangle">
+		<boolean name="flip_normals" value="true"/>
+		<transform name="to_world">
+			<matrix value="1.273643 0.000000 0.000000 0.000000 0.000000 0.000000 1.273643 2.547201 0.000000 -1.273643 0.000000 2.810797 0.000000 0.000000 0.000000 1.000000"/>
+			<translate value="0 0 -2.0"/>
+        </transform>
+		<emitter type="area">
+			<rgb value="11.0 11.0 11.0" name="radiance"/>
+		</emitter>
+		<bsdf type="null"/>
+	</shape>
+	<shape type="rectangle">
+		<boolean name="flip_normals" value="true"/>
+		<transform name="to_world">
+			<matrix value="0.240836 -0.516154 0.533394 4.782585 -0.711202 0.000000 0.321119 1.810554 -0.212404 -0.585244 -0.470425 -2.808902 0.000000 0.000000 0.000000 1.000000"/>
+			<translate value="0 0 -0.5"/>
+        </transform>
+		<emitter type="area">
+			<rgb value="8.0 8.0 8.0" name="radiance"/>
+		</emitter>
+		<bsdf type="null"/>
+	</shape>
+	<shape type="rectangle">
+		<boolean name="flip_normals" value="true"/>
+		<transform name="to_world">
+			<matrix value="0.203478 0.418617 -0.626325 -4.703727 0.742154 0.000000 0.241108 1.635040 0.129344 -0.658548 -0.398133 -1.984299 0.000000 0.000000 0.000000 1.000000"/>
+			<translate value="0 0 -0.5"/>
+        </transform>
+		<emitter type="area">
+			<rgb value="8.0 8.0 8.0" name="radiance"/>
+		</emitter>
+		<bsdf type="null"/>
+	</shape>
+
+<!-- Shapes -->
+
+	<shape type="ply">
+		<string name="filename" value="meshes/Leaf.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Leaf" name="bsdf"/>
+        <ref name="interior" id="medium1"/>
+	</shape>
+
+	<shape type="ply">
+		<string name="filename" value="meshes/Floor.ply"/>
+		<ref id="mat-Floor" name="bsdf"/>
+	</shape>
+
+    <shape type="shapegroup" id="mesh-Icosphere">
+        <shape type="ply">
+            <string name="filename" value="meshes/Icosphere.ply"/>
+            <boolean name="face_normals" value="true"/>
+            <ref id="mat-Particles" name="bsdf"/>
+        </shape>
+    </shape>
+
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.013564 -0.000000 0.000000 2.702805 0.000000 -0.013564 -0.000000 -3.260094 0.000000 -0.000000 0.013564 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.050769 -0.000000 0.000000 3.466291 0.000000 -0.050769 -0.000000 0.952266 0.000000 -0.000000 0.050769 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.015473 -0.000000 0.000000 1.311482 0.000000 -0.015473 -0.000000 -3.901511 0.000000 -0.000000 0.015473 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.029657 -0.000000 0.000000 0.775771 0.000000 -0.029657 -0.000000 -2.503226 0.000000 -0.000000 0.029657 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.040532 -0.000000 0.000000 2.849345 0.000000 -0.040532 -0.000000 -2.734553 0.000000 -0.000000 0.040532 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.046007 -0.000000 0.000000 0.973746 0.000000 -0.046007 -0.000000 -1.075128 0.000000 -0.000000 0.046007 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.048648 -0.000000 0.000000 3.737968 0.000000 -0.048648 -0.000000 -1.388459 0.000000 -0.000000 0.048648 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.031120 -0.000000 0.000000 1.849236 0.000000 -0.031120 -0.000000 -2.658793 0.000000 -0.000000 0.031120 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.037438 -0.000000 0.000000 3.422114 0.000000 -0.037438 -0.000000 -0.331814 0.000000 -0.000000 0.037438 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.007657 -0.000000 0.000000 3.312106 0.000000 -0.007657 -0.000000 1.718347 0.000000 -0.000000 0.007657 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.015744 -0.000000 0.000000 -2.958007 0.000000 -0.015744 -0.000000 -3.487759 0.000000 -0.000000 0.015744 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.035494 -0.000000 0.000000 0.436483 0.000000 -0.035494 -0.000000 -3.719110 0.000000 -0.000000 0.035494 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.034067 -0.000000 0.000000 3.518881 0.000000 -0.034067 -0.000000 -2.504297 0.000000 -0.000000 0.034067 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.010053 -0.000000 0.000000 3.725605 0.000000 -0.010053 -0.000000 -1.338772 0.000000 -0.000000 0.010053 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.008341 -0.000000 0.000000 3.345983 0.000000 -0.008341 -0.000000 -2.580925 0.000000 -0.000000 0.008341 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.013653 -0.000000 0.000000 0.977655 0.000000 -0.013653 -0.000000 -0.789796 0.000000 -0.000000 0.013653 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.046480 -0.000000 0.000000 2.151917 0.000000 -0.046480 -0.000000 -0.100437 0.000000 -0.000000 0.046480 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.016581 -0.000000 0.000000 0.924123 0.000000 -0.016581 -0.000000 -2.710304 0.000000 -0.000000 0.016581 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.029426 -0.000000 0.000000 3.106609 0.000000 -0.029426 -0.000000 -1.745322 0.000000 -0.000000 0.029426 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.033843 -0.000000 0.000000 3.550683 0.000000 -0.033843 -0.000000 -2.822790 0.000000 -0.000000 0.033843 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.036242 -0.000000 0.000000 3.448231 0.000000 -0.036242 -0.000000 2.115858 0.000000 -0.000000 0.036242 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.029595 -0.000000 0.000000 2.030261 0.000000 -0.029595 -0.000000 -2.518830 0.000000 -0.000000 0.029595 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.015040 -0.000000 0.000000 1.134361 0.000000 -0.015040 -0.000000 0.590024 0.000000 -0.000000 0.015040 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.057056 -0.000000 0.000000 -0.113291 0.000000 -0.057056 -0.000000 -1.995240 0.000000 -0.000000 0.057056 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.059038 -0.000000 0.000000 2.557080 0.000000 -0.059038 -0.000000 1.513540 0.000000 -0.000000 0.059038 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.031073 -0.000000 0.000000 -1.464813 0.000000 -0.031073 -0.000000 -3.710303 0.000000 -0.000000 0.031073 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.039883 -0.000000 0.000000 0.046455 0.000000 -0.039883 -0.000000 -1.727745 0.000000 -0.000000 0.039883 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.014437 -0.000000 0.000000 -2.512524 0.000000 -0.014437 -0.000000 -3.273095 0.000000 -0.000000 0.014437 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.024485 -0.000000 0.000000 2.091771 0.000000 -0.024485 -0.000000 -3.085914 0.000000 -0.000000 0.024485 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.030956 -0.000000 0.000000 -1.242046 0.000000 -0.030956 -0.000000 -2.050835 0.000000 -0.000000 0.030956 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.022549 -0.000000 0.000000 3.675171 0.000000 -0.022549 -0.000000 2.389377 0.000000 -0.000000 0.022549 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.018983 -0.000000 0.000000 -1.383848 0.000000 -0.018983 -0.000000 -3.763250 0.000000 -0.000000 0.018983 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.012858 -0.000000 0.000000 0.270856 0.000000 -0.012858 -0.000000 -3.828739 0.000000 -0.000000 0.012858 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.053564 -0.000000 0.000000 2.938896 0.000000 -0.053564 -0.000000 0.294233 0.000000 -0.000000 0.053564 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.031960 -0.000000 0.000000 1.257185 0.000000 -0.031960 -0.000000 -2.736528 0.000000 -0.000000 0.031960 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.009055 -0.000000 0.000000 0.727698 0.000000 -0.009055 -0.000000 -2.834640 0.000000 -0.000000 0.009055 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.049848 -0.000000 0.000000 3.944703 0.000000 -0.049848 -0.000000 0.200233 0.000000 -0.000000 0.049848 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.007052 -0.000000 0.000000 1.830424 0.000000 -0.007052 -0.000000 -3.729116 0.000000 -0.000000 0.007052 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.045341 -0.000000 0.000000 2.015115 0.000000 -0.045341 -0.000000 0.335621 0.000000 -0.000000 0.045341 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.004525 -0.000000 0.000000 1.082956 0.000000 -0.004525 -0.000000 -2.675224 0.000000 -0.000000 0.004525 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.008763 -0.000000 0.000000 3.251696 0.000000 -0.008763 -0.000000 -1.805504 0.000000 -0.000000 0.008763 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.018928 -0.000000 0.000000 2.080393 0.000000 -0.018928 -0.000000 -3.538907 0.000000 -0.000000 0.018928 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.054260 -0.000000 0.000000 0.524440 0.000000 -0.054260 -0.000000 -0.047415 0.000000 -0.000000 0.054260 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.035959 -0.000000 0.000000 2.387266 0.000000 -0.035959 -0.000000 2.092257 0.000000 -0.000000 0.035959 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.016947 -0.000000 0.000000 1.263990 0.000000 -0.016947 -0.000000 -3.836701 0.000000 -0.000000 0.016947 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.016864 -0.000000 0.000000 -2.284632 0.000000 -0.016864 -0.000000 -2.565725 0.000000 -0.000000 0.016864 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+    <shape type="instance">
+        <ref id="mesh-Icosphere" name="shape"/>
+        <transform name="to_world">
+            <matrix value="-0.017156 -0.000000 0.000000 3.015941 0.000000 -0.017156 -0.000000 2.617559 0.000000 -0.000000 0.017156 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+        </transform>
+    </shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.009372 -0.000000 0.000000 0.606778 0.000000 -0.009372 -0.000000 -1.751204 0.000000 -0.000000 0.009372 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.007466 -0.000000 0.000000 3.362148 0.000000 -0.007466 -0.000000 -0.576665 0.000000 -0.000000 0.007466 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.052375 -0.000000 0.000000 0.027095 0.000000 -0.052375 -0.000000 -3.402101 0.000000 -0.000000 0.052375 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.017709 -0.000000 0.000000 1.972897 0.000000 -0.017709 -0.000000 -3.466206 0.000000 -0.000000 0.017709 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.012378 -0.000000 0.000000 3.905416 0.000000 -0.012378 -0.000000 3.669841 0.000000 -0.000000 0.012378 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.015508 -0.000000 0.000000 1.616288 0.000000 -0.015508 -0.000000 -3.268948 0.000000 -0.000000 0.015508 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.048139 -0.000000 0.000000 0.926270 0.000000 -0.048139 -0.000000 -3.723921 0.000000 -0.000000 0.048139 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.005347 -0.000000 0.000000 2.446210 0.000000 -0.005347 -0.000000 -1.292055 0.000000 -0.000000 0.005347 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.015613 -0.000000 0.000000 -1.266603 0.000000 -0.015613 -0.000000 -3.367691 0.000000 -0.000000 0.015613 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.014498 -0.000000 0.000000 2.655822 0.000000 -0.014498 -0.000000 1.479361 0.000000 -0.000000 0.014498 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.033521 -0.000000 0.000000 1.158601 0.000000 -0.033521 -0.000000 -2.486088 0.000000 -0.000000 0.033521 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.036171 -0.000000 0.000000 -2.956979 0.000000 -0.036171 -0.000000 -3.013819 0.000000 -0.000000 0.036171 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.010492 -0.000000 0.000000 0.551584 0.000000 -0.010492 -0.000000 -0.519013 0.000000 -0.000000 0.010492 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.059382 -0.000000 0.000000 -0.675898 0.000000 -0.059382 -0.000000 -1.707171 0.000000 -0.000000 0.059382 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.017830 -0.000000 0.000000 3.585810 0.000000 -0.017830 -0.000000 2.123715 0.000000 -0.000000 0.017830 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.010124 -0.000000 0.000000 2.453849 0.000000 -0.010124 -0.000000 -2.387436 0.000000 -0.000000 0.010124 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.029501 -0.000000 0.000000 2.007454 0.000000 -0.029501 -0.000000 -2.647235 0.000000 -0.000000 0.029501 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.031829 -0.000000 0.000000 1.504536 0.000000 -0.031829 -0.000000 -0.111496 0.000000 -0.000000 0.031829 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.023032 -0.000000 0.000000 -2.052186 0.000000 -0.023032 -0.000000 -3.199293 0.000000 -0.000000 0.023032 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.017730 -0.000000 0.000000 3.111429 0.000000 -0.017730 -0.000000 -0.239452 0.000000 -0.000000 0.017730 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.011630 -0.000000 0.000000 2.766251 0.000000 -0.011630 -0.000000 -0.117892 0.000000 -0.000000 0.011630 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.027248 -0.000000 0.000000 0.879598 0.000000 -0.027248 -0.000000 -0.773753 0.000000 -0.000000 0.027248 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.017382 -0.000000 0.000000 2.184489 0.000000 -0.017382 -0.000000 -0.608150 0.000000 -0.000000 0.017382 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.058256 -0.000000 0.000000 2.789263 0.000000 -0.058256 -0.000000 -2.655316 0.000000 -0.000000 0.058256 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.048141 -0.000000 0.000000 3.629498 0.000000 -0.048141 -0.000000 3.060457 0.000000 -0.000000 0.048141 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.057833 -0.000000 0.000000 -0.732632 0.000000 -0.057833 -0.000000 -1.300409 0.000000 -0.000000 0.057833 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.032394 -0.000000 0.000000 2.673155 0.000000 -0.032394 -0.000000 -2.194090 0.000000 -0.000000 0.032394 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.052427 -0.000000 0.000000 0.132842 0.000000 -0.052427 -0.000000 -1.253186 0.000000 -0.000000 0.052427 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.040546 -0.000000 0.000000 3.433156 0.000000 -0.040546 -0.000000 2.888735 0.000000 -0.000000 0.040546 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.047580 -0.000000 0.000000 0.419192 0.000000 -0.047580 -0.000000 -2.925066 0.000000 -0.000000 0.047580 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.030576 -0.000000 0.000000 0.026849 0.000000 -0.030576 -0.000000 -0.431785 0.000000 -0.000000 0.030576 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.038699 -0.000000 0.000000 -2.163200 0.000000 -0.038699 -0.000000 -3.428338 0.000000 -0.000000 0.038699 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.031703 -0.000000 0.000000 0.481151 0.000000 -0.031703 -0.000000 -0.841028 0.000000 -0.000000 0.031703 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.057127 -0.000000 0.000000 0.669030 0.000000 -0.057127 -0.000000 -3.521998 0.000000 -0.000000 0.057127 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.036393 -0.000000 0.000000 2.719356 0.000000 -0.036393 -0.000000 0.888677 0.000000 -0.000000 0.036393 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.013097 -0.000000 0.000000 3.251844 0.000000 -0.013097 -0.000000 -1.945540 0.000000 -0.000000 0.013097 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.018538 -0.000000 0.000000 1.199076 0.000000 -0.018538 -0.000000 0.767828 0.000000 -0.000000 0.018538 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.020876 -0.000000 0.000000 2.941609 0.000000 -0.020876 -0.000000 -2.392350 0.000000 -0.000000 0.020876 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.049494 -0.000000 0.000000 -0.677601 0.000000 -0.049494 -0.000000 -3.019327 0.000000 -0.000000 0.049494 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.023936 -0.000000 0.000000 3.746673 0.000000 -0.023936 -0.000000 -0.096260 0.000000 -0.000000 0.023936 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.042486 -0.000000 0.000000 1.546438 0.000000 -0.042486 -0.000000 -1.340937 0.000000 -0.000000 0.042486 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.016833 -0.000000 0.000000 -2.736515 0.000000 -0.016833 -0.000000 -3.379235 0.000000 -0.000000 0.016833 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.031798 -0.000000 0.000000 -0.697000 0.000000 -0.031798 -0.000000 -1.658185 0.000000 -0.000000 0.031798 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.047559 -0.000000 0.000000 -0.412543 0.000000 -0.047559 -0.000000 -2.730765 0.000000 -0.000000 0.047559 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.045921 -0.000000 0.000000 -0.487533 0.000000 -0.045921 -0.000000 -2.665769 0.000000 -0.000000 0.045921 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.029371 -0.000000 0.000000 -1.732553 0.000000 -0.029371 -0.000000 -3.041223 0.000000 -0.000000 0.029371 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.048719 -0.000000 0.000000 -1.043369 0.000000 -0.048719 -0.000000 -1.818191 0.000000 -0.000000 0.048719 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.050691 -0.000000 0.000000 2.254326 0.000000 -0.050691 -0.000000 1.311035 0.000000 -0.000000 0.050691 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.007206 -0.000000 0.000000 0.324658 0.000000 -0.007206 -0.000000 -1.967249 0.000000 -0.000000 0.007206 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.032754 -0.000000 0.000000 3.590812 0.000000 -0.032754 -0.000000 -2.690667 0.000000 -0.000000 0.032754 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.029995 -0.000000 0.000000 2.391109 0.000000 -0.029995 -0.000000 2.244142 0.000000 -0.000000 0.029995 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.017476 -0.000000 0.000000 2.958287 0.000000 -0.017476 -0.000000 0.649246 0.000000 -0.000000 0.017476 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.034466 -0.000000 0.000000 3.137457 0.000000 -0.034466 -0.000000 -0.189191 0.000000 -0.000000 0.034466 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.051790 -0.000000 0.000000 -1.949389 0.000000 -0.051790 -0.000000 -3.124765 0.000000 -0.000000 0.051790 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.040586 -0.000000 0.000000 1.635471 0.000000 -0.040586 -0.000000 -1.356879 0.000000 -0.000000 0.040586 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.053069 -0.000000 0.000000 3.468213 0.000000 -0.053069 -0.000000 -3.264557 0.000000 -0.000000 0.053069 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.004473 -0.000000 0.000000 -1.945113 0.000000 -0.004473 -0.000000 -3.106456 0.000000 -0.000000 0.004473 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.014773 -0.000000 0.000000 1.476018 0.000000 -0.014773 -0.000000 -1.728252 0.000000 -0.000000 0.014773 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.039811 -0.000000 0.000000 -3.064487 0.000000 -0.039811 -0.000000 -3.841345 0.000000 -0.000000 0.039811 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.040348 -0.000000 0.000000 2.062220 0.000000 -0.040348 -0.000000 -0.325521 0.000000 -0.000000 0.040348 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.017440 -0.000000 0.000000 2.157664 0.000000 -0.017440 -0.000000 0.854993 0.000000 -0.000000 0.017440 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.041579 -0.000000 0.000000 -0.198860 0.000000 -0.041579 -0.000000 -3.442180 0.000000 -0.000000 0.041579 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.011782 -0.000000 0.000000 -0.188024 0.000000 -0.011782 -0.000000 -3.558140 0.000000 -0.000000 0.011782 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.035472 -0.000000 0.000000 -0.466315 0.000000 -0.035472 -0.000000 -0.869717 0.000000 -0.000000 0.035472 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.043904 -0.000000 0.000000 1.786611 0.000000 -0.043904 -0.000000 -0.071229 0.000000 -0.000000 0.043904 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.050334 -0.000000 0.000000 -3.822951 0.000000 -0.050334 -0.000000 -3.899088 0.000000 -0.000000 0.050334 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.040412 -0.000000 0.000000 -1.968526 0.000000 -0.040412 -0.000000 -3.332632 0.000000 -0.000000 0.040412 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.024110 -0.000000 0.000000 3.773025 0.000000 -0.024110 -0.000000 -3.716100 0.000000 -0.000000 0.024110 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.008717 -0.000000 0.000000 3.290025 0.000000 -0.008717 -0.000000 1.583006 0.000000 -0.000000 0.008717 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.045859 -0.000000 0.000000 2.236143 0.000000 -0.045859 -0.000000 1.862373 0.000000 -0.000000 0.045859 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.034253 -0.000000 0.000000 -3.673203 0.000000 -0.034253 -0.000000 -3.698089 0.000000 -0.000000 0.034253 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.035576 -0.000000 0.000000 3.035701 0.000000 -0.035576 -0.000000 -1.812429 0.000000 -0.000000 0.035576 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.048474 -0.000000 0.000000 3.720271 0.000000 -0.048474 -0.000000 2.581435 0.000000 -0.000000 0.048474 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.013685 -0.000000 0.000000 3.191187 0.000000 -0.013685 -0.000000 -1.016841 0.000000 -0.000000 0.013685 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.017616 -0.000000 0.000000 3.525966 0.000000 -0.017616 -0.000000 -1.600146 0.000000 -0.000000 0.017616 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.056473 -0.000000 0.000000 -2.344270 0.000000 -0.056473 -0.000000 -3.167368 0.000000 -0.000000 0.056473 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.027320 -0.000000 0.000000 3.649290 0.000000 -0.027320 -0.000000 -2.575110 0.000000 -0.000000 0.027320 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.033821 -0.000000 0.000000 -0.016449 0.000000 -0.033821 -0.000000 -1.782594 0.000000 -0.000000 0.033821 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.046374 -0.000000 0.000000 0.210711 0.000000 -0.046374 -0.000000 -0.854857 0.000000 -0.000000 0.046374 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.013057 -0.000000 0.000000 -3.437332 0.000000 -0.013057 -0.000000 -3.531895 0.000000 -0.000000 0.013057 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.042950 -0.000000 0.000000 -2.148068 0.000000 -0.042950 -0.000000 -3.953460 0.000000 -0.000000 0.042950 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.014059 -0.000000 0.000000 3.141814 0.000000 -0.014059 -0.000000 -3.046119 0.000000 -0.000000 0.014059 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.026068 -0.000000 0.000000 0.781154 0.000000 -0.026068 -0.000000 -3.590513 0.000000 -0.000000 0.026068 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.040803 -0.000000 0.000000 2.303221 0.000000 -0.040803 -0.000000 -1.796861 0.000000 -0.000000 0.040803 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.041859 -0.000000 0.000000 0.088661 0.000000 -0.041859 -0.000000 -1.395871 0.000000 -0.000000 0.041859 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.054199 -0.000000 0.000000 1.457112 0.000000 -0.054199 -0.000000 -0.541930 0.000000 -0.000000 0.054199 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.015364 -0.000000 0.000000 -0.971143 0.000000 -0.015364 -0.000000 -2.610631 0.000000 -0.000000 0.015364 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.018072 -0.000000 0.000000 0.651394 0.000000 -0.018072 -0.000000 -0.339319 0.000000 -0.000000 0.018072 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.043917 -0.000000 0.000000 0.944026 0.000000 -0.043917 -0.000000 -3.163179 0.000000 -0.000000 0.043917 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.017411 -0.000000 0.000000 1.096458 0.000000 -0.017411 -0.000000 -1.486784 0.000000 -0.000000 0.017411 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.034176 -0.000000 0.000000 -1.740507 0.000000 -0.034176 -0.000000 -3.163730 0.000000 -0.000000 0.034176 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.008204 -0.000000 0.000000 3.264305 0.000000 -0.008204 -0.000000 -2.188458 0.000000 -0.000000 0.008204 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.016503 -0.000000 0.000000 1.050006 0.000000 -0.016503 -0.000000 -3.519995 0.000000 -0.000000 0.016503 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.044992 -0.000000 0.000000 -0.227086 0.000000 -0.044992 -0.000000 3.738294 0.000000 -0.000000 0.044992 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.005393 -0.000000 0.000000 -3.708911 0.000000 -0.005393 -0.000000 -1.437363 0.000000 -0.000000 0.005393 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.015749 -0.000000 0.000000 0.009085 0.000000 -0.015749 -0.000000 0.169881 0.000000 -0.000000 0.015749 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.017893 -0.000000 0.000000 1.263888 0.000000 -0.017893 -0.000000 3.154771 0.000000 -0.000000 0.017893 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.046663 -0.000000 0.000000 -1.342622 0.000000 -0.046663 -0.000000 0.135242 0.000000 -0.000000 0.046663 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.054625 -0.000000 0.000000 -3.921092 0.000000 -0.054625 -0.000000 0.014073 0.000000 -0.000000 0.054625 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.017449 -0.000000 0.000000 -3.088735 0.000000 -0.017449 -0.000000 2.461940 0.000000 -0.000000 0.017449 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.005458 -0.000000 0.000000 -3.636807 0.000000 -0.005458 -0.000000 0.979299 0.000000 -0.000000 0.005458 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.048470 -0.000000 0.000000 -3.051481 0.000000 -0.048470 -0.000000 1.136963 0.000000 -0.000000 0.048470 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.026357 -0.000000 0.000000 -3.478095 0.000000 -0.026357 -0.000000 -0.620808 0.000000 -0.000000 0.026357 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.023573 -0.000000 0.000000 -3.884182 0.000000 -0.023573 -0.000000 2.446818 0.000000 -0.000000 0.023573 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.009230 -0.000000 0.000000 -1.699229 0.000000 -0.009230 -0.000000 0.810886 0.000000 -0.000000 0.009230 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.056170 -0.000000 0.000000 -1.194786 0.000000 -0.056170 -0.000000 -0.237990 0.000000 -0.000000 0.056170 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.021373 -0.000000 0.000000 0.924155 0.000000 -0.021373 -0.000000 3.132842 0.000000 -0.000000 0.021373 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.017593 -0.000000 0.000000 0.006832 0.000000 -0.017593 -0.000000 0.706251 0.000000 -0.000000 0.017593 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.027637 -0.000000 0.000000 -0.665114 0.000000 -0.027637 -0.000000 2.320276 0.000000 -0.000000 0.027637 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.027749 -0.000000 0.000000 -0.837797 0.000000 -0.027749 -0.000000 1.178168 0.000000 -0.000000 0.027749 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.047895 -0.000000 0.000000 1.305837 0.000000 -0.047895 -0.000000 2.127795 0.000000 -0.000000 0.047895 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.010924 -0.000000 0.000000 -2.916137 0.000000 -0.010924 -0.000000 -0.634855 0.000000 -0.000000 0.010924 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.027252 -0.000000 0.000000 -3.013342 0.000000 -0.027252 -0.000000 3.836742 0.000000 -0.000000 0.027252 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.048743 -0.000000 0.000000 -0.179535 0.000000 -0.048743 -0.000000 2.204113 0.000000 -0.000000 0.048743 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.038471 -0.000000 0.000000 -1.221636 0.000000 -0.038471 -0.000000 3.806186 0.000000 -0.000000 0.038471 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.038292 -0.000000 0.000000 -3.136067 0.000000 -0.038292 -0.000000 -1.929740 0.000000 -0.000000 0.038292 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.020299 -0.000000 0.000000 -3.708487 0.000000 -0.020299 -0.000000 1.339875 0.000000 -0.000000 0.020299 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.053399 -0.000000 0.000000 3.143299 0.000000 -0.053399 -0.000000 3.363289 0.000000 -0.000000 0.053399 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.032879 -0.000000 0.000000 -0.411214 0.000000 -0.032879 -0.000000 -0.234090 0.000000 -0.000000 0.032879 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.044089 -0.000000 0.000000 -3.522304 0.000000 -0.044089 -0.000000 1.081656 0.000000 -0.000000 0.044089 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.053717 -0.000000 0.000000 -0.673856 0.000000 -0.053717 -0.000000 2.092251 0.000000 -0.000000 0.053717 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.021241 -0.000000 0.000000 -0.715185 0.000000 -0.021241 -0.000000 3.545628 0.000000 -0.000000 0.021241 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.033287 -0.000000 0.000000 0.795663 0.000000 -0.033287 -0.000000 1.578541 0.000000 -0.000000 0.033287 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.013323 -0.000000 0.000000 -2.922732 0.000000 -0.013323 -0.000000 -1.178141 0.000000 -0.000000 0.013323 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.013111 -0.000000 0.000000 -1.284523 0.000000 -0.013111 -0.000000 0.301517 0.000000 -0.000000 0.013111 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.021292 -0.000000 0.000000 -0.584148 0.000000 -0.021292 -0.000000 -0.350698 0.000000 -0.000000 0.021292 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.040246 -0.000000 0.000000 -2.182673 0.000000 -0.040246 -0.000000 -0.690240 0.000000 -0.000000 0.040246 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.051808 -0.000000 0.000000 -0.912220 0.000000 -0.051808 -0.000000 0.710208 0.000000 -0.000000 0.051808 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.034188 -0.000000 0.000000 -3.738769 0.000000 -0.034188 -0.000000 -1.361497 0.000000 -0.000000 0.034188 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.053035 -0.000000 0.000000 -3.493901 0.000000 -0.053035 -0.000000 -2.901448 0.000000 -0.000000 0.053035 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.022370 -0.000000 0.000000 2.119865 0.000000 -0.022370 -0.000000 3.822130 0.000000 -0.000000 0.022370 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.056487 -0.000000 0.000000 -0.981344 0.000000 -0.056487 -0.000000 1.334494 0.000000 -0.000000 0.056487 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.005502 -0.000000 0.000000 1.068364 0.000000 -0.005502 -0.000000 3.764603 0.000000 -0.000000 0.005502 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.019670 -0.000000 0.000000 2.835778 0.000000 -0.019670 -0.000000 2.912653 0.000000 -0.000000 0.019670 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.020209 -0.000000 0.000000 -1.558058 0.000000 -0.020209 -0.000000 3.797728 0.000000 -0.000000 0.020209 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.009718 -0.000000 0.000000 -3.613848 0.000000 -0.009718 -0.000000 1.531861 0.000000 -0.000000 0.009718 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.045659 -0.000000 0.000000 -0.094327 0.000000 -0.045659 -0.000000 3.452278 0.000000 -0.000000 0.045659 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.023748 -0.000000 0.000000 -1.756428 0.000000 -0.023748 -0.000000 -0.636396 0.000000 -0.000000 0.023748 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.055306 -0.000000 0.000000 -1.120548 0.000000 -0.055306 -0.000000 2.756308 0.000000 -0.000000 0.055306 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.006365 -0.000000 0.000000 0.507286 0.000000 -0.006365 -0.000000 2.542881 0.000000 -0.000000 0.006365 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.022547 -0.000000 0.000000 2.223262 0.000000 -0.022547 -0.000000 3.009676 0.000000 -0.000000 0.022547 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.035896 -0.000000 0.000000 -0.099252 0.000000 -0.035896 -0.000000 0.733110 0.000000 -0.000000 0.035896 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.032569 -0.000000 0.000000 -2.202613 0.000000 -0.032569 -0.000000 2.693695 0.000000 -0.000000 0.032569 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.043130 -0.000000 0.000000 -0.485120 0.000000 -0.043130 -0.000000 2.941386 0.000000 -0.000000 0.043130 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.008990 -0.000000 0.000000 -0.988348 0.000000 -0.008990 -0.000000 3.386820 0.000000 -0.000000 0.008990 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.019080 -0.000000 0.000000 -3.607245 0.000000 -0.019080 -0.000000 3.777916 0.000000 -0.000000 0.019080 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.042860 -0.000000 0.000000 -2.970552 0.000000 -0.042860 -0.000000 -2.862984 0.000000 -0.000000 0.042860 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.007857 -0.000000 0.000000 -3.563868 0.000000 -0.007857 -0.000000 2.753425 0.000000 -0.000000 0.007857 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.058765 -0.000000 0.000000 -1.729453 0.000000 -0.058765 -0.000000 3.024714 0.000000 -0.000000 0.058765 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.058756 -0.000000 0.000000 -3.143999 0.000000 -0.058756 -0.000000 -2.734538 0.000000 -0.000000 0.058756 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.035789 -0.000000 0.000000 -1.574626 0.000000 -0.035789 -0.000000 0.404779 0.000000 -0.000000 0.035789 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.009934 -0.000000 0.000000 0.626455 0.000000 -0.009934 -0.000000 2.269307 0.000000 -0.000000 0.009934 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.011965 -0.000000 0.000000 -2.630195 0.000000 -0.011965 -0.000000 -1.881690 0.000000 -0.000000 0.011965 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.021031 -0.000000 0.000000 -1.593704 0.000000 -0.021031 -0.000000 0.774807 0.000000 -0.000000 0.021031 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.051792 -0.000000 0.000000 -2.893952 0.000000 -0.051792 -0.000000 0.214834 0.000000 -0.000000 0.051792 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.040621 -0.000000 0.000000 -2.752167 0.000000 -0.040621 -0.000000 3.298513 0.000000 -0.000000 0.040621 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.023355 -0.000000 0.000000 -3.411651 0.000000 -0.023355 -0.000000 1.381884 0.000000 -0.000000 0.023355 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.015699 -0.000000 0.000000 1.909057 0.000000 -0.015699 -0.000000 2.166353 0.000000 -0.000000 0.015699 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.050852 -0.000000 0.000000 -3.708879 0.000000 -0.050852 -0.000000 1.758216 0.000000 -0.000000 0.050852 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.023414 -0.000000 0.000000 -0.952450 0.000000 -0.023414 -0.000000 3.232907 0.000000 -0.000000 0.023414 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.032742 -0.000000 0.000000 -3.091774 0.000000 -0.032742 -0.000000 1.299771 0.000000 -0.000000 0.032742 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.013718 -0.000000 0.000000 -3.336375 0.000000 -0.013718 -0.000000 -0.565449 0.000000 -0.000000 0.013718 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.045374 -0.000000 0.000000 -3.859588 0.000000 -0.045374 -0.000000 -1.425037 0.000000 -0.000000 0.045374 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.023949 -0.000000 0.000000 -2.380951 0.000000 -0.023949 -0.000000 3.806692 0.000000 -0.000000 0.023949 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.018270 -0.000000 0.000000 0.461367 0.000000 -0.018270 -0.000000 3.458782 0.000000 -0.000000 0.018270 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.008162 -0.000000 0.000000 -3.594491 0.000000 -0.008162 -0.000000 2.859079 0.000000 -0.000000 0.008162 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.036298 -0.000000 0.000000 -1.032582 0.000000 -0.036298 -0.000000 -0.322778 0.000000 -0.000000 0.036298 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.056716 -0.000000 0.000000 -3.216578 0.000000 -0.056716 -0.000000 -2.372544 0.000000 -0.000000 0.056716 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.011190 -0.000000 0.000000 -0.013361 0.000000 -0.011190 -0.000000 3.718109 0.000000 -0.000000 0.011190 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.025131 -0.000000 0.000000 -3.807217 0.000000 -0.025131 -0.000000 -0.510801 0.000000 -0.000000 0.025131 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.027922 -0.000000 0.000000 -0.228780 0.000000 -0.027922 -0.000000 0.932894 0.000000 -0.000000 0.027922 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.011580 -0.000000 0.000000 2.414722 0.000000 -0.011580 -0.000000 3.366976 0.000000 -0.000000 0.011580 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.036460 -0.000000 0.000000 1.714856 0.000000 -0.036460 -0.000000 1.790153 0.000000 -0.000000 0.036460 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.054675 -0.000000 0.000000 3.333514 0.000000 -0.054675 -0.000000 3.410426 0.000000 -0.000000 0.054675 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.025071 -0.000000 0.000000 -0.282698 0.000000 -0.025071 -0.000000 0.858729 0.000000 -0.000000 0.025071 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.036199 -0.000000 0.000000 -1.998871 0.000000 -0.036199 -0.000000 3.187994 0.000000 -0.000000 0.036199 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.037011 -0.000000 0.000000 2.431726 0.000000 -0.037011 -0.000000 2.631271 0.000000 -0.000000 0.037011 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.043239 -0.000000 0.000000 0.671801 0.000000 -0.043239 -0.000000 3.665637 0.000000 -0.000000 0.043239 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.014499 -0.000000 0.000000 -1.122760 0.000000 -0.014499 -0.000000 1.956251 0.000000 -0.000000 0.014499 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.025845 -0.000000 0.000000 -2.948031 0.000000 -0.025845 -0.000000 1.174522 0.000000 -0.000000 0.025845 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.004506 -0.000000 0.000000 1.203383 0.000000 -0.004506 -0.000000 1.320605 0.000000 -0.000000 0.004506 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.050504 -0.000000 0.000000 0.891335 0.000000 -0.050504 -0.000000 3.693162 0.000000 -0.000000 0.050504 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.009745 -0.000000 0.000000 -2.884509 0.000000 -0.009745 -0.000000 -1.118021 0.000000 -0.000000 0.009745 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.040549 -0.000000 0.000000 1.148365 0.000000 -0.040549 -0.000000 1.524087 0.000000 -0.000000 0.040549 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.035913 -0.000000 0.000000 -2.681916 0.000000 -0.035913 -0.000000 -0.190354 0.000000 -0.000000 0.035913 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.019169 -0.000000 0.000000 -1.608863 0.000000 -0.019169 -0.000000 0.437743 0.000000 -0.000000 0.019169 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.046313 -0.000000 0.000000 -3.352181 0.000000 -0.046313 -0.000000 0.351471 0.000000 -0.000000 0.046313 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.049896 -0.000000 0.000000 -2.221028 0.000000 -0.049896 -0.000000 2.877666 0.000000 -0.000000 0.049896 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.054821 -0.000000 0.000000 -0.465749 0.000000 -0.054821 -0.000000 0.857844 0.000000 -0.000000 0.054821 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.005363 -0.000000 0.000000 -3.654273 0.000000 -0.005363 -0.000000 1.306582 0.000000 -0.000000 0.005363 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.008505 -0.000000 0.000000 -2.313454 0.000000 -0.008505 -0.000000 1.347866 0.000000 -0.000000 0.008505 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.020170 -0.000000 0.000000 -1.056126 0.000000 -0.020170 -0.000000 0.697713 0.000000 -0.000000 0.020170 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.040802 -0.000000 0.000000 1.911705 0.000000 -0.040802 -0.000000 2.296750 0.000000 -0.000000 0.040802 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.013108 -0.000000 0.000000 -1.524756 0.000000 -0.013108 -0.000000 -0.481366 0.000000 -0.000000 0.013108 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.037356 -0.000000 0.000000 -1.566496 0.000000 -0.037356 -0.000000 -0.550708 0.000000 -0.000000 0.037356 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.010046 -0.000000 0.000000 -2.851580 0.000000 -0.010046 -0.000000 0.757098 0.000000 -0.000000 0.010046 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.013164 -0.000000 0.000000 2.918215 0.000000 -0.013164 -0.000000 3.855172 0.000000 -0.000000 0.013164 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.055257 -0.000000 0.000000 -1.991556 0.000000 -0.055257 -0.000000 1.923688 0.000000 -0.000000 0.055257 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.011598 -0.000000 0.000000 -1.994110 0.000000 -0.011598 -0.000000 -1.276949 0.000000 -0.000000 0.011598 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.045680 -0.000000 0.000000 -3.500866 0.000000 -0.045680 -0.000000 3.952826 0.000000 -0.000000 0.045680 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.041793 -0.000000 0.000000 1.292374 0.000000 -0.041793 -0.000000 3.258047 0.000000 -0.000000 0.041793 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.014655 -0.000000 0.000000 0.195780 0.000000 -0.014655 -0.000000 3.171677 0.000000 -0.000000 0.014655 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.052416 -0.000000 0.000000 -3.823961 0.000000 -0.052416 -0.000000 2.268758 0.000000 -0.000000 0.052416 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.011705 -0.000000 0.000000 -1.015291 0.000000 -0.011705 -0.000000 2.761929 0.000000 -0.000000 0.011705 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.048129 -0.000000 0.000000 -3.049971 0.000000 -0.048129 -0.000000 -2.469280 0.000000 -0.000000 0.048129 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.033422 -0.000000 0.000000 -0.411008 0.000000 -0.033422 -0.000000 3.036004 0.000000 -0.000000 0.033422 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.029175 -0.000000 0.000000 0.625632 0.000000 -0.029175 -0.000000 1.223869 0.000000 -0.000000 0.029175 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.033186 -0.000000 0.000000 -0.660157 0.000000 -0.033186 -0.000000 1.605728 0.000000 -0.000000 0.033186 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.058942 -0.000000 0.000000 0.646876 0.000000 -0.058942 -0.000000 1.542665 0.000000 -0.000000 0.058942 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.006086 -0.000000 0.000000 2.440189 0.000000 -0.006086 -0.000000 2.642670 0.000000 -0.000000 0.006086 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.026014 -0.000000 0.000000 -0.096823 0.000000 -0.026014 -0.000000 1.688926 0.000000 -0.000000 0.026014 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.045861 -0.000000 0.000000 -3.329146 0.000000 -0.045861 -0.000000 1.837245 0.000000 -0.000000 0.045861 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.005803 -0.000000 0.000000 -1.746760 0.000000 -0.005803 -0.000000 3.671697 0.000000 -0.000000 0.005803 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.009185 -0.000000 0.000000 -3.699117 0.000000 -0.009185 -0.000000 -2.771514 0.000000 -0.000000 0.009185 -1.874277 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.017145 -0.000000 0.000000 -3.955414 0.000000 -0.017145 -0.000000 0.131913 0.000000 -0.000000 0.017145 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.037747 -0.000000 0.000000 0.855765 0.000000 -0.037747 -0.000000 2.383126 0.000000 -0.000000 0.037747 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.038111 -0.000000 0.000000 1.596181 0.000000 -0.038111 -0.000000 3.237810 0.000000 -0.000000 0.038111 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.045770 -0.000000 0.000000 -1.092963 0.000000 -0.045770 -0.000000 1.788808 0.000000 -0.000000 0.045770 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.010029 -0.000000 0.000000 -0.152151 0.000000 -0.010029 -0.000000 -0.151102 0.000000 -0.000000 0.010029 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.028036 -0.000000 0.000000 -0.418468 0.000000 -0.028036 -0.000000 3.135878 0.000000 -0.000000 0.028036 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.055204 -0.000000 0.000000 -0.121666 0.000000 -0.055204 -0.000000 3.323560 0.000000 -0.000000 0.055204 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.035418 -0.000000 0.000000 1.126620 0.000000 -0.035418 -0.000000 2.330463 0.000000 -0.000000 0.035418 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.033303 -0.000000 0.000000 -2.426189 0.000000 -0.033303 -0.000000 3.420769 0.000000 -0.000000 0.033303 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.037955 -0.000000 0.000000 1.758522 0.000000 -0.037955 -0.000000 2.717535 0.000000 -0.000000 0.037955 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.043618 -0.000000 0.000000 0.355808 0.000000 -0.043618 -0.000000 1.437299 0.000000 -0.000000 0.043618 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.008203 -0.000000 0.000000 0.858307 0.000000 -0.008203 -0.000000 1.863298 0.000000 -0.000000 0.008203 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.042347 -0.000000 0.000000 -0.706331 0.000000 -0.042347 -0.000000 3.369326 0.000000 -0.000000 0.042347 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.018776 -0.000000 0.000000 1.609493 0.000000 -0.018776 -0.000000 2.065532 0.000000 -0.000000 0.018776 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.007317 -0.000000 0.000000 -1.363511 0.000000 -0.007317 -0.000000 3.882550 0.000000 -0.000000 0.007317 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.047358 -0.000000 0.000000 -2.565722 0.000000 -0.047358 -0.000000 0.504029 0.000000 -0.000000 0.047358 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.021832 -0.000000 0.000000 2.717242 0.000000 -0.021832 -0.000000 3.100395 0.000000 -0.000000 0.021832 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.054920 -0.000000 0.000000 -0.728444 0.000000 -0.054920 -0.000000 2.636349 0.000000 -0.000000 0.054920 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+	<shape type="instance">
+		<ref id="mesh-Icosphere" name="shape"/>
+		<transform name="to_world">
+			<matrix value="-0.059360 -0.000000 0.000000 2.671258 0.000000 -0.059360 -0.000000 2.766930 0.000000 -0.000000 0.059360 -1.874276 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</shape>
+</scene>
