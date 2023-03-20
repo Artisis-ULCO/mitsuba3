@@ -15,6 +15,8 @@
 #include <mitsuba/render/spiral.h>
 #include <nanothread/nanothread.h>
 
+#include <fstream>
+
 NAMESPACE_BEGIN(mitsuba)
 
 // -----------------------------------------------------------------------------
@@ -412,6 +414,14 @@ SamplingIntegrator<Float, Spectrum>::render_sample(const Scene *scene,
         ray.scale_differential(diff_scale_factor);
 
     const Medium *medium = sensor->medium();
+
+    std::ofstream gnn_data_file;
+    gnn_data_file.open ("gnn_file.data", std::ios::out | std::ios::app);
+    
+    gnn_data_file << sample_pos.x() << "," << sample_pos.y() << ";";
+    gnn_data_file << adjusted_pos.x() << "," << adjusted_pos.y() << ";";
+
+    gnn_data_file.close();
 
     auto [spec, valid] = sample(scene, sampler, ray, medium,
                aovs + (has_alpha ? 5 : 4) /* skip R,G,B,[A],W */, active);
