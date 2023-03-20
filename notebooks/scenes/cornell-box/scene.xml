@@ -3,8 +3,8 @@
 	<default name="spp" value="10" />
 	<!--<default name="resy" value="1024" />
 	<default name="resx" value="1024" />-->
-    <default name="resy" value="256" />
-	<default name="resx" value="256" />
+    <default name="resy" value="128" />
+	<default name="resx" value="128" />
 	<default name="max_depth" value="3" />
 	<integrator type="$integrator">
 		<integer name="max_depth" value="$max_depth" />
