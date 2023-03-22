@@ -195,6 +195,7 @@ public:
 
     std::pair<Spectrum, Mask> sample(const Scene *scene,
                                      Sampler * sampler,
+                                     const Vector2f &pos,
                                      const RayDifferential3f &ray,
                                      const Medium *medium,
                                      Float *aovs,
@@ -307,7 +308,7 @@ public:
 
                 case Type::IntegratorRGBA: {
                         std::pair<Spectrum, Mask> result_sub =
-                            m_integrators[ctr].first->sample(scene, sampler, ray, medium, aovs, active);
+                            m_integrators[ctr].first->sample(scene, sampler, pos, ray, medium, aovs, active);
                         aovs += m_integrators[ctr].second;
                         Color3f rgb =
                             spectrum_to_color3f(result_sub.first, ray, active);

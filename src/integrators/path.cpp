@@ -94,6 +94,7 @@ public:
 
     std::pair<Spectrum, Bool> sample(const Scene *scene,
                                      Sampler *sampler,
+                                     const Vector2f & /* pos */,
                                      const RayDifferential3f &ray_,
                                      const Medium * /* medium */,
                                      Float * /* aovs */,

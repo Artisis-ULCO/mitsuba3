@@ -87,13 +87,14 @@ public:
 
     std::pair<Spectrum, Mask> sample(const Scene *scene,
                                      Sampler * sampler,
+                                     const Vector2f &pos,
                                      const RayDifferential3f &ray,
                                      const Medium *medium,
                                      Float *aovs,
                                      Mask active) const override {
         MI_MASKED_FUNCTION(ProfilerPhase::SamplingIntegratorSample, active);
 
-        auto [spec, mask] = m_integrator->sample(scene, sampler, ray, medium, aovs + 12, active);
+        auto [spec, mask] = m_integrator->sample(scene, sampler, pos, ray, medium, aovs + 12, active);
 
         if constexpr (is_polarized_v<Spectrum>) {
             /* The Stokes vector that comes from the integrator is still aligned

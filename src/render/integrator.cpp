@@ -415,15 +415,7 @@ SamplingIntegrator<Float, Spectrum>::render_sample(const Scene *scene,
 
     const Medium *medium = sensor->medium();
 
-    std::ofstream gnn_data_file;
-    gnn_data_file.open ("gnn_file.data", std::ios::out | std::ios::app);
-    
-    gnn_data_file << sample_pos.x() << "," << sample_pos.y() << ";";
-    gnn_data_file << adjusted_pos.x() << "," << adjusted_pos.y() << ";";
-
-    gnn_data_file.close();
-
-    auto [spec, valid] = sample(scene, sampler, ray, medium,
+    auto [spec, valid] = sample(scene, sampler, pos, ray, medium,
                aovs + (has_alpha ? 5 : 4) /* skip R,G,B,[A],W */, active);
 
     UnpolarizedSpectrum spec_u = unpolarized_spectrum(ray_weight * spec);
@@ -461,6 +453,7 @@ SamplingIntegrator<Float, Spectrum>::render_sample(const Scene *scene,
 MI_VARIANT std::pair<Spectrum, typename SamplingIntegrator<Float, Spectrum>::Mask>
 SamplingIntegrator<Float, Spectrum>::sample(const Scene * /* scene */,
                                             Sampler * /* sampler */,
+                                            const Vector2f & /* pos */,
                                             const RayDifferential3f & /* ray */,
                                             const Medium * /* medium */,
                                             Float * /* aovs */,

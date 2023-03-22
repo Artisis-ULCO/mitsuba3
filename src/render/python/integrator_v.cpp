@@ -79,6 +79,7 @@ public:
 
     std::pair<Spectrum, Mask> sample(const Scene *scene,
                                      Sampler *sampler,
+                                     const Vector2f &pos,
                                      const RayDifferential3f &ray,
                                      const Medium *medium,
                                      Float *aovs,
@@ -89,7 +90,7 @@ public:
         if (sample_override) {
             using PyReturn = std::tuple<Spectrum, Mask, std::vector<Float>>;
             auto [spec, mask, aovs_] =
-                sample_override(scene, sampler, ray, medium, active)
+                sample_override(scene, sampler, pos, ray, medium, active)
                     .template cast<PyReturn>();
 
             std::copy(aovs_.begin(), aovs_.end(), aovs);
@@ -206,6 +207,7 @@ public:
 
     std::pair<Spectrum, Mask> sample(const Scene *scene,
                                      Sampler *sampler,
+                                     const Vector2f &pos,
                                      const RayDifferential3f &ray,
                                      const Medium * /* unused */,
                                      Float * /* unused */,
@@ -220,6 +222,7 @@ public:
                 "mode"_a=drjit::ADMode::Primal,
                 "scene"_a=scene,
                 "sampler"_a=sampler,
+                "pos"_a=pos,
                 "ray"_a=ray,
                 "depth"_a=ray,
                 "δL"_a=py::none(),
@@ -286,15 +289,15 @@ MI_PY_EXPORT(Integrator) {
         .def(
             "sample",
             [](const SamplingIntegrator *integrator, const Scene *scene,
-               Sampler *sampler, const RayDifferential3f &ray,
+               Sampler *sampler, const Vector2f &pos, const RayDifferential3f &ray,
                const Medium *medium, Mask active) {
                 py::gil_scoped_release release;
                 std::vector<Float> aovs(integrator->aov_names().size(), 0.f);
                 auto [spec, mask] = integrator->sample(
-                    scene, sampler, ray, medium, aovs.data(), active);
+                    scene, sampler, pos, ray, medium, aovs.data(), active);
                 return std::make_tuple(spec, mask, aovs);
             },
-            "scene"_a, "sampler"_a, "ray"_a, "medium"_a = nullptr,
+            "scene"_a, "sampler"_a, "pos"_a, "ray"_a, "medium"_a = nullptr,
             "active"_a = true, D(SamplingIntegrator, sample));
 
     MI_PY_REGISTER_OBJECT("register_integrator", Integrator)

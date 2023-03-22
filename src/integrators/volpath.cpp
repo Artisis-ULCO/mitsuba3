@@ -93,6 +93,7 @@ public:
 
     std::pair<Spectrum, Mask> sample(const Scene *scene,
                                      Sampler *sampler,
+                                     const Vector2f & /* pos */,
                                      const RayDifferential3f &ray_,
                                      const Medium *initial_medium,
                                      Float * /* aovs */,

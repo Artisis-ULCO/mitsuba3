@@ -97,6 +97,7 @@ public:
 
     std::pair<Spectrum, Bool> sample(const Scene *scene,
                                      Sampler *sampler,
+                                     const Vector2f &pos,
                                      const RayDifferential3f &ray_,
                                      const Medium * /* medium */,
                                      Float * /* aovs */,
@@ -110,6 +111,7 @@ public:
 
         Ray3f ray                     = Ray3f(ray_);
         Spectrum throughput           = 1.f;
+        Spectrum bsdf_weight          = 1.f; // keep track of BSDF weight
         Spectrum result               = 0.f;
         Float eta                     = 1.f;
         UInt32 depth                  = 0;
@@ -144,8 +146,10 @@ public:
 
         // origin;
         std::ofstream gnn_data_file;
-        gnn_data_file.open ("gnn_file.data", std::ios::out | std::ios::app);
-        gnn_data_file << ray.o.x() << "," << ray.o.y() << "," << ray.o.z() ;
+        gnn_data_file.open(scene->get_logfile(), std::ios::out | std::ios::app);
+        gnn_data_file << pos.x() << "," << pos.y() << ";";
+        gnn_data_file << ray.o.x() << "," << ray.o.y() << "," << ray.o.z() << ";";
+        gnn_data_file << ray.d.x() << "," << ray.d.y() << "," << ray.d.z();
 
         while (loop(active)) {
             /* dr::Loop implicitly masks all code in the loop using the 'active'
@@ -156,13 +160,16 @@ public:
                                      /* ray_flags = */ +RayFlags::All,
                                      /* coherent = */ dr::eq(depth, 0u));
 
-            // time :: p :: n :: throughput :: valid;
-            gnn_data_file << ";" << si.t << "::";
-            gnn_data_file << si.p.x() << "," << si.p.y() << "," << si.p.z() << "::";
-            gnn_data_file << si.n.x() << "," << si.n.y() << "," << si.n.z() << "::";
-            gnn_data_file << throughput.x() << "," << throughput.y() << "," << throughput.z() << "::";
-            gnn_data_file << si.is_valid();
-
+            // bsdf_weight: on first ray, default to 1. Enable to keep track without dependency 
+            //    (resp. throughput) bsdf information
+            // distance :: bsdf_weight :: p :: n;
+            // => store only valid intersection
+            if (dr::any_or<true>(si.is_valid())) {
+                gnn_data_file << ";" << si.t << "::";
+                gnn_data_file << bsdf_weight.x() << "," << bsdf_weight.y() << "," << bsdf_weight.z() << "::";
+                gnn_data_file << si.p.x() << "," << si.p.y() << "," << si.p.z() << "::";
+                gnn_data_file << si.n.x() << "," << si.n.y() << "," << si.n.z() << "::";
+            }
             // ---------------------- Direct emission ----------------------
 
             /* dr::any_or() checks for active entries in the provided boolean
