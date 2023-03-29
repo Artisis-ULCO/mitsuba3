@@ -163,13 +163,12 @@ public:
             // bsdf_weight: on first ray, default to 1. Enable to keep track without dependency 
             //    (resp. throughput) bsdf information
             // distance :: bsdf_weight :: p :: n;
-            // => store only valid intersection
-            if (dr::any_or<true>(si.is_valid())) {
-                gnn_data_file << ";" << si.t << "::";
-                gnn_data_file << bsdf_weight.x() << "," << bsdf_weight.y() << "," << bsdf_weight.z() << "::";
-                gnn_data_file << si.p.x() << "," << si.p.y() << "," << si.p.z() << "::";
-                gnn_data_file << si.n.x() << "," << si.n.y() << "," << si.n.z() << "::";
-            }
+            // => store only valid intersection?
+            gnn_data_file << ";" << si.t << "::";
+            gnn_data_file << si.is_valid() << "::";
+            gnn_data_file << bsdf_weight.x() << "," << bsdf_weight.y() << "," << bsdf_weight.z() << "::";
+            gnn_data_file << si.p.x() << "," << si.p.y() << "," << si.p.z() << "::";
+            gnn_data_file << si.n.x() << "," << si.n.y() << "," << si.n.z() << "::";
             // ---------------------- Direct emission ----------------------
 
             /* dr::any_or() checks for active entries in the provided boolean
