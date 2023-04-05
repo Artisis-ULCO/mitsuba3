@@ -144,6 +144,39 @@ MI_VARIANT Float MISDivergence<Float, Spectrum>::mis_weight(Float alpha, Float p
 // =======================================================================
 
 // =======================================================================
+//! @{ \name MISLight implementations
+// =======================================================================
+
+MI_VARIANT MISLight<Float, Spectrum>::MISLight(uint32_t n_methods) : Base(n_methods) {
+    // expected only 2 sampling methods
+    Assert(n_methods == 2); 
+}
+
+MI_VARIANT void MISLight<Float, Spectrum>::update_alphas() {
+    
+    // Importance sampling using Light
+    alphas[0] = 0.01f;
+    alphas[1] = 0.99f;
+}
+
+// =======================================================================
+//! @{ \name MISBSDF implementations
+// =======================================================================
+
+MI_VARIANT MISBSDF<Float, Spectrum>::MISBSDF(uint32_t n_methods) : Base(n_methods) {
+    // expected only 2 sampling methods
+    Assert(n_methods == 2); 
+}
+
+MI_VARIANT void MISBSDF<Float, Spectrum>::update_alphas() {
+    
+    // Importance sampling using BSDF
+    alphas[0] = 0.99f;
+    alphas[1] = 0.01f;
+}
+
+
+// =======================================================================
 //! @{ \name MISLinear1 implementations
 // =======================================================================
 
@@ -492,6 +525,8 @@ MI_IMPLEMENT_CLASS_VARIANT(MISModel, Object, "MIS")
 MI_IMPLEMENT_CLASS_VARIANT(MISBalance, MISModel, "MIS balance")
 MI_IMPLEMENT_CLASS_VARIANT(MISPower, MISModel, "MIS power")
 MI_IMPLEMENT_CLASS_VARIANT(MISDivergence, MISModel, "MIS Divergence")
+MI_IMPLEMENT_CLASS_VARIANT(MISLight, MISDivergence, "MIS Light")
+MI_IMPLEMENT_CLASS_VARIANT(MISBSDF, MISDivergence, "MIS BSDF")
 MI_IMPLEMENT_CLASS_VARIANT(MISLinear1, MISDivergence, "MIS Linear 1")
 MI_IMPLEMENT_CLASS_VARIANT(MISLinear2, MISDivergence, "MIS Linear 2")
 MI_IMPLEMENT_CLASS_VARIANT(MISLinear3, MISDivergence, "MIS Linear 3")
@@ -501,6 +536,8 @@ MI_INSTANTIATE_CLASS(MISModel)
 MI_INSTANTIATE_CLASS(MISBalance)
 MI_INSTANTIATE_CLASS(MISPower)
 MI_INSTANTIATE_CLASS(MISDivergence)
+MI_INSTANTIATE_CLASS(MISLight)
+MI_INSTANTIATE_CLASS(MISBSDF)
 MI_INSTANTIATE_CLASS(MISLinear1)
 MI_INSTANTIATE_CLASS(MISLinear2)
 MI_INSTANTIATE_CLASS(MISLinear3)

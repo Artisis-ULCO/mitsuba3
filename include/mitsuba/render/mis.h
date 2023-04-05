@@ -99,6 +99,38 @@ protected:
     virtual void update_alphas() = 0;
 };
 
+// Specific MIS types: Light only
+template <typename Float, typename Spectrum>
+class MI_EXPORT_LIB MISLight : public MISDivergence<Float, Spectrum> {
+
+    MI_IMPORT_BASE(MISDivergence, luminance_sum, pdf_sum, n_samples_methods, 
+                squared_sum, alphas)
+    MI_IMPORT_TYPES()
+
+public:
+    MI_DECLARE_CLASS()
+    
+    MISLight(uint32_t n_methods);
+
+    void update_alphas() override;
+};
+
+// Specific MIS types: BSDF only
+template <typename Float, typename Spectrum>
+class MI_EXPORT_LIB MISBSDF : public MISDivergence<Float, Spectrum> {
+
+    MI_IMPORT_BASE(MISDivergence, luminance_sum, pdf_sum, n_samples_methods, 
+                squared_sum, alphas)
+    MI_IMPORT_TYPES()
+
+public:
+    MI_DECLARE_CLASS()
+    
+    MISBSDF(uint32_t n_methods);
+
+    void update_alphas() override;
+};
+
 // Specific MIS types: Linear1 divergence
 template <typename Float, typename Spectrum>
 class MI_EXPORT_LIB MISLinear1 : public MISDivergence<Float, Spectrum> {
@@ -189,6 +221,8 @@ MI_EXTERN_CLASS(MISModel)
 MI_EXTERN_CLASS(MISBalance)
 MI_EXTERN_CLASS(MISPower)
 MI_EXTERN_CLASS(MISDivergence)
+MI_EXTERN_CLASS(MISLight)
+MI_EXTERN_CLASS(MISBSDF)
 MI_EXTERN_CLASS(MISLinear1)
 MI_EXTERN_CLASS(MISLinear2)
 MI_EXTERN_CLASS(MISLinear3)
