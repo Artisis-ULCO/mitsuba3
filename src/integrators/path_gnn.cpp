@@ -160,16 +160,8 @@ public:
                                      /* ray_flags = */ +RayFlags::All,
                                      /* coherent = */ dr::eq(depth, 0u));
 
-            // bsdf_weight: on first ray, default to 1. Enable to keep track without dependency 
-            //    (resp. throughput) bsdf information
-            // distance :: bsdf_weight :: p :: n;
-            // => store only valid intersection?
-            gnn_data_file << ";" << si.t << "::";
-            gnn_data_file << si.is_valid() << "::";
-            gnn_data_file << bsdf_weight.x() << "," << bsdf_weight.y() << "," << bsdf_weight.z() << "::";
-            gnn_data_file << si.p.x() << "," << si.p.y() << "," << si.p.z() << "::";
-            gnn_data_file << si.n.x() << "," << si.n.y() << "," << si.n.z() << "::";
             // ---------------------- Direct emission ----------------------
+            Spectrum c_result = 0.f;
 
             /* dr::any_or() checks for active entries in the provided boolean
                array. JIT/Megakernel modes can't do this test efficiently as
@@ -192,10 +184,25 @@ public:
                     throughput,
                     ds.emitter->eval(si, prev_bsdf_pdf > 0.f) * mis_bsdf,
                     result);
+
+                // intermediate GNN
+                c_result = ds.emitter->eval(si, prev_bsdf_pdf > 0.f) * mis_bsdf;
             }
 
             // Continue tracing the path at this point?
             Bool active_next = (depth + 1 < m_max_depth) && si.is_valid();
+
+            // bsdf_weight: on first ray, default to 1. Enable to keep track without dependency 
+            //    (resp. throughput) bsdf information
+            // distance :: bsdf_weight :: p :: n;
+            // => store only valid intersection?
+            gnn_data_file << ";" << si.t << "::";
+            gnn_data_file << si.is_valid() << "::";
+            gnn_data_file << active_next << "::";
+            gnn_data_file << bsdf_weight.x() << "," << bsdf_weight.y() << "," << bsdf_weight.z() << "::";
+            gnn_data_file << si.p.x() << "," << si.p.y() << "," << si.p.z() << "::";
+            gnn_data_file << si.n.x() << "," << si.n.y() << "," << si.n.z() << "::";
+            
 
             if (dr::none_or<false>(active_next))
                 break; // early exit for scalar mode
@@ -248,7 +255,15 @@ public:
                 // Accumulate, being careful with polarization (see spec_fma)
                 result[active_em] = spec_fma(
                     throughput, bsdf_val * em_weight * mis_em, result);
+
+                c_result += bsdf_val * em_weight * mis_em;
             }
+
+            // Save GNN Data
+            // Save only current perceived light
+            // store also throughput and intermediate result from light sampling (next event)
+            gnn_data_file << throughput.x() << "," << throughput.y() << "," << throughput.z() << "::";
+            gnn_data_file << c_result.x() << "," << c_result.y() << "," << c_result.z();
 
             // ---------------------- BSDF sampling ----------------------
 
@@ -300,9 +315,6 @@ public:
             active = active_next && (!rr_active || rr_continue) &&
                      dr::neq(throughput_max, 0.f);
 
-            // store also throughput and intermediate result from bsdf and light sampling (next event)
-            gnn_data_file << throughput.x() << "," << throughput.y() << "," << throughput.z() << "::";
-            gnn_data_file << result.x() << "," << result.y() << "," << result.z();
         }
 
         gnn_data_file << ";";
