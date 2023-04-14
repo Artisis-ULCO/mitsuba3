@@ -299,6 +299,10 @@ public:
 
             active = active_next && (!rr_active || rr_continue) &&
                      dr::neq(throughput_max, 0.f);
+
+            // store also throughput and intermediate result from bsdf and light sampling (next event)
+            gnn_data_file << throughput.x() << "," << throughput.y() << "," << throughput.z() << "::";
+            gnn_data_file << result.x() << "," << result.y() << "," << result.z();
         }
 
         gnn_data_file << ";";
