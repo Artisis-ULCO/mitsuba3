@@ -576,31 +576,65 @@ public:
         std::string::size_type ext = filename_str.find(".");
         std::string prefix = filename_str.substr(0, ext);
         std::string map_filename = prefix + ".map";
+        std::string pdfs_map_filename = prefix + "_pdfs.map";
+        std::string samples_map_filename = prefix + "_samples.map";
 
         std::ofstream map_file;
         map_file.open(map_filename);
+
+        std::ofstream pdfs_file;
+        pdfs_file.open(pdfs_map_filename);
+
+        std::ofstream samples_file;
+        samples_file.open(samples_map_filename);
 
         for (uint32_t j = 0; j < m_crop_size.y(); j++) {
             for (uint32_t i = 0; i < m_crop_size.x(); i++) {
                 
                 auto pos_f = Point2f(i, j);
                 MISModel* mis_model = this->get_mis_model(pos_f);
+                // uint32_t n_samples = mis_model->number_of_samples();
                 
                 for (uint32_t m_i = 0; m_i < mis_model->number_of_methods(); m_i++) {
                     Float alpha = mis_model->get_alpha(m_i);
                     map_file << alpha;
+
+                    // Write PDFs data
+                    auto pdfs = mis_model->get_pdfs(m_i);
+
+                    for (uint32_t p_i = 0; p_i < pdfs.size(); p_i++) {
                     
-                    if (m_i < mis_model->number_of_methods() - 1)
+                        pdfs_file << pdfs.at(p_i);
+                        
+                        if (p_i < pdfs.size() - 1) {
+                            pdfs_file << " ";
+                        }
+                    }
+
+                    // Write Samplings (number of samples) data
+                    auto m_samples = mis_model->number_of_samples_method(m_i);
+
+                    samples_file << m_samples;
+                    
+                    if (m_i < mis_model->number_of_methods() - 1) {
                         map_file << ",";
+                        pdfs_file << ",";
+                        samples_file << ",";
+                    }
                 }   
-                if (i < m_crop_size.x() - 1)
+                if (i < m_crop_size.x() - 1) {
                     map_file << ";";
+                    pdfs_file << ";";
+                    samples_file << ";";
+                }
             }
             map_file << std::endl;
+            pdfs_file << std::endl;
+            samples_file << std::endl;
         }
 
         map_file.close();
-        std::cout << "AlphaMap saved into: " << map_filename << std::endl;
+        std::cout << "AlphaMap and PDFs data saved into: " << map_filename << std::endl;
     }
 
     void schedule_storage() override {

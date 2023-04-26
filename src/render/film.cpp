@@ -52,7 +52,7 @@ MI_VARIANT Film<Float, Spectrum>::Film(const Properties &props) : Object() {
 
     // [MIS] get expected type
     mis_model_type = props.get<std::string>("mis", "power");
-    mis_gamma = props.get<float>("gamma", 1.f);
+    mis_gamma = props.get<float>("gamma", 0.1f);
     mis_batch_samples = props.get<uint32_t>("batch", 10);
 
     init_mis_model();
@@ -80,13 +80,13 @@ MI_VARIANT void Film<Float, Spectrum>::init_mis_model() {
         else if (mis_model_type == "bsdf")
             mis_div = std::make_unique<MISBSDF<Float, Spectrum>>(2);
         else if (mis_model_type == "linear1")
-            mis_div = std::make_unique<MISLinear1<Float, Spectrum>>(2);
+            mis_div = std::make_unique<MISLinear1<Float, Spectrum>>(2, mis_batch_samples);
         else if (mis_model_type == "linear2")
-            mis_div = std::make_unique<MISLinear2<Float, Spectrum>>(2);
+            mis_div = std::make_unique<MISLinear2<Float, Spectrum>>(2, mis_batch_samples);
         else if (mis_model_type == "linear3")
-            mis_div = std::make_unique<MISLinear3<Float, Spectrum>>(2);
+            mis_div = std::make_unique<MISLinear3<Float, Spectrum>>(2, mis_batch_samples);
         else if (mis_model_type == "tsallis")
-            mis_div = std::make_unique<MISTsallis<Float, Spectrum>>(2, mis_gamma, mis_batch_samples);
+            mis_div = std::make_unique<MISTsallis<Float, Spectrum>>(2, mis_batch_samples, mis_gamma);
         else
             mis_div = std::make_unique<MISPower<Float, Spectrum>>(2);
 

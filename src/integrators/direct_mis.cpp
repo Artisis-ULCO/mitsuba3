@@ -127,6 +127,14 @@ public:
 
         Spectrum result(0.f);
 
+        // Some information
+        // std::cout << "m_weight_bsdf: " << m_weight_bsdf << std::endl;
+        // std::cout << "m_weight_lum: " << m_weight_lum << std::endl;
+        // std::cout << "m_frac_bsdf: " << m_frac_bsdf << std::endl;
+        // std::cout << "m_frac_lum: " << m_frac_lum << std::endl;
+        // std::cout << "alpha bsdf: " << mis->get_alpha(0) << std::endl;
+        // std::cout << "alpha lum: " << mis->get_alpha(0) << std::endl;
+
         // ----------------------- Visible emitters -----------------------
 
         if (!m_hide_emitters) {
@@ -136,8 +144,13 @@ public:
         }
 
         active &= si.is_valid();
-        if (dr::none_or<false>(active))
+        if (dr::none_or<false>(active)) {
+
+            // need to update sample
+            mis->update_n_samples();
+            // mis->update_alphas();
             return { result, valid_ray };
+        }
 
         // ----------------------- Emitter sampling -----------------------
 
@@ -166,8 +179,8 @@ public:
                 bsdf_val = si.to_world_mueller(bsdf_val, -wo, si.wi);
 
                 // [MIS]: Emitter / BSDF sampling
-                mis->add_sampling_data(1, bsdf_val * emitter_val, {bsdf_pdf, ds.pdf});
-                Float alpha = mis->get_alpha(1);
+                mis->add_sampling_data(0, bsdf_val * emitter_val, {ds.pdf * m_frac_lum, bsdf_pdf * m_frac_bsdf});
+                Float alpha = mis->get_alpha(0);
 
                 Float mis_w = dr::select(ds.delta, Float(1.f), mis->mis_weight(alpha,
                     ds.pdf * m_frac_lum, bsdf_pdf * m_frac_bsdf) * m_weight_lum);
@@ -203,8 +216,8 @@ public:
                     dr::select(delta, 0.f, scene->pdf_emitter_direction(si, ds, active_b));
 
                 // [MIS]: Emitter / BSDF sampling
-                mis->add_sampling_data(0, bsdf_val * emitter_val, {bs.pdf, emitter_pdf});
-                Float alpha = mis->get_alpha(0);
+                mis->add_sampling_data(1, bsdf_val * emitter_val, {emitter_pdf * m_frac_lum, bs.pdf * m_frac_bsdf});
+                Float alpha = mis->get_alpha(1);
 
                 result[active_b] +=
                     bsdf_val * emitter_val *

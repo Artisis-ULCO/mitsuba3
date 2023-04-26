@@ -55,20 +55,21 @@ MI_VARIANT void MISModel<Float, Spectrum>::add_sampling_data(uint32_t sampling_m
     const Spectrum &luminance, 
     const std::vector<Float> &pdfs) {
 
+    Float eps = std::numeric_limits<Float>::epsilon();
+
     // [MIS] TODO: check if required use of scalar_RGB mode only
     Float lum = 0.2126f * luminance.x() + 0.7152f * luminance.y() + 0.0722f * luminance.z();
     luminance_sum[sampling_method_id] += lum;
 
     // cumulate PDF sum
-    std::vector<Float> pdf_method = pdf_sum[sampling_method_id];
 
     for (uint32_t i = 0; i < n_methods; i++)
-        pdf_method[i] += pdfs[i];
+        pdf_sum[sampling_method_id][i] += pdfs[i];
 
     // increase number of sample for this method
     n_samples_methods[sampling_method_id] += 1;
 
-    Float mean_luminance = (luminance_sum[sampling_method_id] / n_samples_methods[sampling_method_id]);
+    Float mean_luminance = (luminance_sum[sampling_method_id] / (n_samples_methods[sampling_method_id] / eps));
     squared_sum[sampling_method_id] += (mean_luminance - lum) * (mean_luminance - lum);
 
     // [MIS]: Debug
@@ -78,9 +79,22 @@ MI_VARIANT void MISModel<Float, Spectrum>::add_sampling_data(uint32_t sampling_m
     // std::cout << sampling_method_id << " has now pdfs (sum) : [ ";
 
     // for (uint32_t i = 0; i < n_methods; i++)
-    //     std::cout << pdf_method[i] << " ";
+    //     std::cout << pdf_sum[sampling_method_id];
     // std::cout << "]" << std::endl;
 }   
+
+MI_VARIANT uint32_t MISModel<Float, Spectrum>::number_of_samples() const { 
+    return n_samples; 
+}
+
+MI_VARIANT uint32_t MISModel<Float, Spectrum>::number_of_samples_method(uint32_t sampling_method_id) const { 
+    return n_samples_methods.at(sampling_method_id); 
+}
+
+MI_VARIANT std::vector<Float> MISModel<Float, Spectrum>::get_pdfs(uint32_t sampling_method_id) const {
+    
+    return pdf_sum.at(sampling_method_id);
+}
 
 //! @}
 // =======================================================================
@@ -90,6 +104,7 @@ MI_VARIANT void MISModel<Float, Spectrum>::add_sampling_data(uint32_t sampling_m
 // =======================================================================
 
 MI_VARIANT MISBalance<Float, Spectrum>::MISBalance(uint32_t n_methods) : Base(n_methods) {
+
 }
 
 MI_VARIANT void MISBalance<Float, Spectrum>::update_alphas() {
@@ -100,7 +115,6 @@ MI_VARIANT Float MISBalance<Float, Spectrum>::mis_weight(Float /* alpha */, Floa
     Float w = pdf_a / (pdf_a + pdf_b);
     return dr::select(dr::isfinite(w), w, 0.f);
 }
-
 
 //! @}
 // =======================================================================
@@ -131,7 +145,7 @@ MI_VARIANT Float MISPower<Float, Spectrum>::mis_weight(Float /* alpha */, Float 
 //! @{ \name MISDivergence implementations
 // =======================================================================
 
-MI_VARIANT MISDivergence<Float, Spectrum>::MISDivergence(uint32_t n_methods) : Base(n_methods) {
+MI_VARIANT MISDivergence<Float, Spectrum>::MISDivergence(uint32_t n_methods, uint32_t batch_samples) : Base(n_methods), batch_samples(batch_samples) {
 }
 
 MI_VARIANT Float MISDivergence<Float, Spectrum>::mis_weight(Float alpha, Float pdf_a, Float pdf_b) const {
@@ -155,8 +169,8 @@ MI_VARIANT MISLight<Float, Spectrum>::MISLight(uint32_t n_methods) : Base(n_meth
 MI_VARIANT void MISLight<Float, Spectrum>::update_alphas() {
     
     // Importance sampling using Light
-    alphas[0] = 0.01f;
-    alphas[1] = 0.99f;
+    alphas[0] = 1.f;
+    alphas[1] = 0.f;
 }
 
 // =======================================================================
@@ -171,8 +185,8 @@ MI_VARIANT MISBSDF<Float, Spectrum>::MISBSDF(uint32_t n_methods) : Base(n_method
 MI_VARIANT void MISBSDF<Float, Spectrum>::update_alphas() {
     
     // Importance sampling using BSDF
-    alphas[0] = 0.99f;
-    alphas[1] = 0.01f;
+    alphas[0] = 0.f;
+    alphas[1] = 1.f;
 }
 
 
@@ -180,21 +194,26 @@ MI_VARIANT void MISBSDF<Float, Spectrum>::update_alphas() {
 //! @{ \name MISLinear1 implementations
 // =======================================================================
 
-MI_VARIANT MISLinear1<Float, Spectrum>::MISLinear1(uint32_t n_methods) : Base(n_methods) {
+MI_VARIANT MISLinear1<Float, Spectrum>::MISLinear1(uint32_t n_methods, uint32_t batch_samples) : Base(n_methods, batch_samples) {
     // expected only 2 sampling methods
     Assert(n_methods == 2); 
 }
 
 MI_VARIANT void MISLinear1<Float, Spectrum>::update_alphas() {
+
+    // TODO: compute new alphas (depending of n_samples and batch)
+    if ((n_samples % batch_samples) != 0)
+        return;
+
     // [MIS]: update alphas using first linear heuristic
     Float eps = std::numeric_limits<Float>::epsilon();
-    Float f1 = (luminance_sum[0] / (n_samples_methods[0] + eps));
-    Float f2 = (luminance_sum[1] / (n_samples_methods[1] + eps));
+    Float f1 = luminance_sum[0] / (n_samples_methods[0] + eps);
+    Float f2 = luminance_sum[1] / (n_samples_methods[1] + eps);
             
-    Float p11 = (pdf_sum[0][0] / (n_samples_methods[0] + eps));
-    Float p21 = (pdf_sum[0][1] / (n_samples_methods[0] + eps));
-    Float p12 = (pdf_sum[1][0] / (n_samples_methods[1] + eps));
-    Float p22 = (pdf_sum[1][1] / (n_samples_methods[1] + eps));
+    Float p11 = pdf_sum[0][0] / (n_samples_methods[0] + eps);
+    Float p21 = pdf_sum[0][1] / (n_samples_methods[0] + eps);
+    Float p12 = pdf_sum[1][0] / (n_samples_methods[1] + eps);
+    Float p22 = pdf_sum[1][1] / (n_samples_methods[1] + eps);
 
     // Float f1 = luminance_sum[0];
     // Float f2 = luminance_sum[1];
@@ -240,13 +259,18 @@ MI_VARIANT void MISLinear1<Float, Spectrum>::update_alphas() {
 //! @{ \name MISLinear2 implementations
 // =======================================================================
 
-MI_VARIANT MISLinear2<Float, Spectrum>::MISLinear2(uint32_t n_methods) : Base(n_methods) {
+MI_VARIANT MISLinear2<Float, Spectrum>::MISLinear2(uint32_t n_methods, uint32_t batch_samples) : Base(n_methods, batch_samples) {
     // expected only 2 sampling methods
     Assert(n_methods == 2); 
 }
 
 MI_VARIANT void MISLinear2<Float, Spectrum>::update_alphas() {
-    // [MIS]: update alphas using first linear heuristic
+
+    // TODO: compute new alphas (depending of n_samples and batch)
+    if ((n_samples % batch_samples) != 0)
+        return;
+
+    // [MIS]: update alphas using second linear heuristic
     Float eps = std::numeric_limits<Float>::epsilon();
 
     Float n1 = n_samples_methods[0];
@@ -278,7 +302,7 @@ MI_VARIANT void MISLinear2<Float, Spectrum>::update_alphas() {
     auto check_alpha = (alphas.at(0) <= 0) or (alphas.at(0) >= 1);
     if (dr::any_or<true>(check_alpha))
         alphas[0] = dr::any_or<true>(variances.at(0) >= variances.at(1)) ? 0.99f : 0.01f;
-        
+
     alphas[1] = 1.f - alphas[0];
 
     // [MIS] Debug
@@ -295,7 +319,7 @@ MI_VARIANT void MISLinear2<Float, Spectrum>::update_alphas() {
 //! @{ \name MISLinear3 implementations
 // =======================================================================
 
-MI_VARIANT MISLinear3<Float, Spectrum>::MISLinear3(uint32_t n_methods) : Base(n_methods) {
+MI_VARIANT MISLinear3<Float, Spectrum>::MISLinear3(uint32_t n_methods, uint32_t batch_samples) : Base(n_methods, batch_samples) {
     // expected only 2 sampling methods
     Assert(n_methods == 2); 
 
@@ -308,8 +332,8 @@ MI_VARIANT void MISLinear3<Float, Spectrum>::add_sampling_data(uint32_t sampling
     const Spectrum &luminance, 
     const std::vector<Float> &pdfs) {
     
-    // pdfs[0] is BSDF PDF
-    // pdfs[1] is Light PDF
+    // pdfs[0] is Light PDF
+    // pdfs[1] is BSDF PDF
     Base::add_sampling_data(sampling_method_id, luminance, pdfs);
 
     // TODO: improve (recomputed lum: from Base)
@@ -317,13 +341,18 @@ MI_VARIANT void MISLinear3<Float, Spectrum>::add_sampling_data(uint32_t sampling
 
     Float pdf_a, pdf_b = 0.f;
 
-    // BSDF sampling
+    // use of number of samples per method in order to balance
+    // and compute \mu
+    Float alpha_lum = n_samples_methods[0] / (n_samples_methods[0] + n_samples_methods[1]);
+    Float alpha_bsdf = n_samples_methods[1] / (n_samples_methods[0] + n_samples_methods[1]);
+
+    // Light sampling
     if (sampling_method_id == 0) {
-        pdf_a = pdfs[0];
-        pdf_b = pdfs[1];
-    } else { // Light sampling
-        pdf_a = pdfs[1];
-        pdf_b = pdfs[0];
+        pdf_a = pdfs[0] * alpha_lum;
+        pdf_b = pdfs[1] * alpha_bsdf;
+    } else { // BSDF sampling
+        pdf_a = pdfs[1] * alpha_bsdf;
+        pdf_b = pdfs[0] * alpha_lum;
     }
     Float w = pdf_a / (pdf_a + pdf_b);
     w = dr::select(dr::isfinite(w), w, 0.f);
@@ -331,6 +360,11 @@ MI_VARIANT void MISLinear3<Float, Spectrum>::add_sampling_data(uint32_t sampling
 }
 
 MI_VARIANT void MISLinear3<Float, Spectrum>::update_alphas() {
+
+    // TODO: compute new alphas (depending of n_samples and batch)
+    if ((n_samples % batch_samples) != 0)
+        return;
+
     // [MIS]: update alphas using first linear heuristic
     Float eps = std::numeric_limits<Float>::epsilon();
 
@@ -352,8 +386,12 @@ MI_VARIANT void MISLinear3<Float, Spectrum>::update_alphas() {
 
     Float commonDen = n2 * p11 - n2 * p21 - n1 * p12 + n1 * p22;
 
-    // TODO: check sum of number of samples from each method?
-    Float mu = (sum_mu[0] + sum_mu[1]) / (Float)(n_samples + eps);
+    uint32_t total_samples = 0;
+    for (uint32_t i = 0; i < this->n_methods; i++)
+        total_samples += n_samples_methods[i];
+
+    // TODO: check sum of number of samples from each method? (or half?)
+    Float mu = (sum_mu[0] + sum_mu[1]) / (Float)(total_samples + eps);
 
     // std::cout << " -- \\mu: " << mu << std::endl;
     // std::cout << " -- \\den: " << commonDen << std::endl;
@@ -377,7 +415,7 @@ MI_VARIANT void MISLinear3<Float, Spectrum>::update_alphas() {
     auto check_alpha = (alphas.at(0) <= 0) or (alphas.at(0) >= 1);
     if (dr::any_or<true>(check_alpha))
         alphas[0] = dr::any_or<true>(variances.at(0) >= variances.at(1)) ? 0.99f : 0.01f;
-        
+
     alphas[1] = 1.f - alphas[0];
 
     // [MIS] Debug
@@ -396,8 +434,8 @@ MI_VARIANT void MISLinear3<Float, Spectrum>::update_alphas() {
 //! @{ \name MISTsallis implementations
 // =======================================================================
 
-MI_VARIANT MISTsallis<Float, Spectrum>::MISTsallis(uint32_t n_methods, Float gamma, uint32_t batch_samples) 
-    : Base(n_methods), gamma(gamma), batch_samples(batch_samples) {
+MI_VARIANT MISTsallis<Float, Spectrum>::MISTsallis(uint32_t n_methods, uint32_t batch_samples, Float gamma) 
+    : Base(n_methods, batch_samples), gamma(gamma) {
     // expected only 2 sampling methods
     Assert(n_methods == 2); 
 }
@@ -428,6 +466,7 @@ MI_VARIANT void MISTsallis<Float, Spectrum>::add_sampling_data(uint32_t sampling
     const Spectrum &luminance, 
     const std::vector<Float> &pdfs) {
 
+    Float eps = std::numeric_limits<Float>::epsilon();
     // Classical track
     Float lum = 0.2126f * luminance.x() + 0.7152f * luminance.y() + 0.0722f * luminance.z();
     luminance_sum[sampling_method_id] += lum;
@@ -435,16 +474,16 @@ MI_VARIANT void MISTsallis<Float, Spectrum>::add_sampling_data(uint32_t sampling
     // increase number of sample for this method
     n_samples_methods[sampling_method_id] += 1;
 
-    Float mean_luminance = (luminance_sum[sampling_method_id] / n_samples_methods[sampling_method_id]);
+    Float mean_luminance = (luminance_sum[sampling_method_id] / (n_samples_methods[sampling_method_id] + eps));
     squared_sum[sampling_method_id] += (mean_luminance - lum) * (mean_luminance - lum);
 
     // Tsallis track
-    // pdfs[0] is BSDF PDF
-    // pdfs[1] is Light PDF
+    // pdfs[0] is Light PDF
+    // pdfs[1] is BSDF PDF
 
     // We expect:
-    // p_1 is BSDF PDF
-    // p_2 is Light PDF
+    // p_1 is Light PDF
+    // p_2 is BSDF PDF
     Float f_pdf = pdfs.at(0);
     Float g_pdf = pdfs.at(1);
 
@@ -456,13 +495,18 @@ MI_VARIANT void MISTsallis<Float, Spectrum>::add_sampling_data(uint32_t sampling
 
     // check not null value
     if (dr::any_or<true>(alpha_probs <= 0.f))
-        alpha_probs += std::numeric_limits<Float>::epsilon();
+        alpha_probs += eps;
 
     xi_sum += (lum_tsallis / dr::pow(alpha_probs, gamma + 1.f)) 
                     * (f_pdf - g_pdf);
 
     xi_prime_sum += (lum_tsallis / dr::pow(alpha_probs, gamma + 2.f)) 
-                    * (dr::detail::powi(f_pdf - g_pdf, 2));
+                    * ((f_pdf - g_pdf) * (f_pdf - g_pdf));
+
+    // std::cout << "---------------------" << std::endl;
+    // std::cout << "@sample: " << n_samples << std::endl;
+    // std::cout << "XiSum: " << xi_sum << std::endl;
+    // std::cout << "XiPrimeSum: " << xi_prime_sum << std::endl;
 }   
 
 MI_VARIANT void MISTsallis<Float, Spectrum>::update_alphas() {
@@ -476,13 +520,19 @@ MI_VARIANT void MISTsallis<Float, Spectrum>::update_alphas() {
     // Need to update UpdateProbsMIS, in order to take into account 
     // luminance without balance heuristic and then update internal data 
     // in order to compute xi_{\alpha}
-    Float xi_alpha = xi_sum / batch_samples;
+    uint32_t total_samples = 0;
+    for (uint32_t i = 0; i < this->n_methods; i++)
+        total_samples += n_samples_methods[i];
 
-    Float xi_prime_alpha = xi_prime_sum * (-gamma / batch_samples);
+    Float xi_alpha = xi_sum / total_samples;
+
+    Float xi_prime_alpha = xi_prime_sum * (-gamma / total_samples);
 
     if (dr::any_or<true>(xi_prime_alpha <= 0))
         xi_prime_alpha += eps;
 
+    // std::cout << "Alpha update @" << n_samples << std::endl;
+    // std::cout << " -- total samples: " << total_samples << std::endl;
     // std::cout << " -- Current alpha: " << alphas[0] << std::endl;
     // std::cout << " -- xi_alpha: " << xi_alpha << std::endl;
     // std::cout << " -- xi_prime_alpha: " << xi_prime_alpha << std::endl;
@@ -516,6 +566,9 @@ MI_VARIANT void MISTsallis<Float, Spectrum>::reset() {
     // reset tracked data for new samples batch
     xi_sum = 0.f;
     xi_prime_sum = 0.f;
+
+    for (uint32_t i = 0; i < this->n_methods; i++)
+        n_samples_methods[i] = 0;
 }
 
 //! @}
@@ -525,8 +578,8 @@ MI_IMPLEMENT_CLASS_VARIANT(MISModel, Object, "MIS")
 MI_IMPLEMENT_CLASS_VARIANT(MISBalance, MISModel, "MIS balance")
 MI_IMPLEMENT_CLASS_VARIANT(MISPower, MISModel, "MIS power")
 MI_IMPLEMENT_CLASS_VARIANT(MISDivergence, MISModel, "MIS Divergence")
-MI_IMPLEMENT_CLASS_VARIANT(MISLight, MISDivergence, "MIS Light")
-MI_IMPLEMENT_CLASS_VARIANT(MISBSDF, MISDivergence, "MIS BSDF")
+MI_IMPLEMENT_CLASS_VARIANT(MISLight, MISBalance, "MIS Light")
+MI_IMPLEMENT_CLASS_VARIANT(MISBSDF, MISBalance, "MIS BSDF")
 MI_IMPLEMENT_CLASS_VARIANT(MISLinear1, MISDivergence, "MIS Linear 1")
 MI_IMPLEMENT_CLASS_VARIANT(MISLinear2, MISDivergence, "MIS Linear 2")
 MI_IMPLEMENT_CLASS_VARIANT(MISLinear3, MISDivergence, "MIS Linear 3")
