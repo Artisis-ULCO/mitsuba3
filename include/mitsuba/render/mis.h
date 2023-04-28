@@ -14,12 +14,6 @@ public:
 
     MI_IMPORT_TYPES()
 
-    void update_n_samples();
-
-    uint32_t number_of_samples() const;
-
-    uint32_t number_of_methods() const;
-
     virtual Float get_alpha(uint32_t sampling_method_id) const;
 
     virtual void add_sampling_data(uint32_t sampling_method_id, 
@@ -38,17 +32,27 @@ public:
 
     uint32_t number_of_samples_method(uint32_t sampling_method_id) const;
 
+    uint32_t n_batch_samples() const;
+
+    void update_n_samples();
+
+    uint32_t number_of_samples() const;
+
+    uint32_t number_of_methods() const;
+
     MI_DECLARE_CLASS()
 
 protected:
-    MISModel(uint32_t n_methods);
+    MISModel(uint32_t n_methods, uint32_t batch_samples);
 
     virtual void init_alphas();
 
 protected:
     uint32_t n_methods;
+    uint32_t batch_samples;
     uint32_t n_samples; // total n_samples
     std::map<uint32_t, Float> alphas;
+    std::map<uint32_t, Float> max_pdf;
     std::map<uint32_t, uint32_t> n_samples_methods;
     std::map<uint32_t, Float> luminance_sum;
     std::map<uint32_t, Float> squared_sum;
@@ -63,7 +67,7 @@ class MI_EXPORT_LIB MISBalance : public MISModel<Float, Spectrum> {
     MI_IMPORT_TYPES()
 
 public:
-    MISBalance(uint32_t n_methods);
+    MISBalance(uint32_t n_methods, uint32_t batch_samples);
 
     virtual void update_alphas() override;
     Float mis_weight(Float alpha, Float pdf_a, Float pdf_b) const override;
@@ -79,7 +83,7 @@ class MI_EXPORT_LIB MISPower : public MISModel<Float, Spectrum> {
     MI_IMPORT_TYPES()
 
 public:
-    MISPower(uint32_t n_methods);
+    MISPower(uint32_t n_methods, uint32_t batch_samples);
 
     void update_alphas() override;
     Float mis_weight(Float alpha, Float pdf_a, Float pdf_b) const override;
@@ -89,31 +93,33 @@ public:
 
 // Specific MIS types: Light only
 template <typename Float, typename Spectrum>
-class MI_EXPORT_LIB MISLight : public MISBalance<Float, Spectrum> {
+class MI_EXPORT_LIB MISLight : public MISModel<Float, Spectrum> {
 
-    MI_IMPORT_BASE(MISBalance, alphas)
+    MI_IMPORT_BASE(MISModel, alphas)
     MI_IMPORT_TYPES()
 
 public:
     MI_DECLARE_CLASS()
     
-    MISLight(uint32_t n_methods);
-
+    MISLight(uint32_t n_methods, uint32_t batch_samples);
+    
+    Float mis_weight(Float alpha, Float pdf_a, Float pdf_b) const override;
     void update_alphas() override;
 };
 
 // Specific MIS types: BSDF only
 template <typename Float, typename Spectrum>
-class MI_EXPORT_LIB MISBSDF : public MISBalance<Float, Spectrum> {
+class MI_EXPORT_LIB MISBSDF : public MISModel<Float, Spectrum> {
 
-    MI_IMPORT_BASE(MISBalance, alphas)
+    MI_IMPORT_BASE(MISModel, alphas)
     MI_IMPORT_TYPES()
 
 public:
     MI_DECLARE_CLASS()
     
-    MISBSDF(uint32_t n_methods);
+    MISBSDF(uint32_t n_methods, uint32_t batch_samples);
 
+    Float mis_weight(Float alpha, Float pdf_a, Float pdf_b) const override;
     void update_alphas() override;
 };
 
@@ -134,9 +140,6 @@ protected:
 
     virtual void update_alphas() = 0;
     virtual void reset() = 0;
-
-protected:
-    uint32_t batch_samples;
 };
 
 // Specific MIS types: Linear1 divergence
@@ -144,7 +147,7 @@ template <typename Float, typename Spectrum>
 class MI_EXPORT_LIB MISLinear1 : public MISDivergence<Float, Spectrum> {
 
     MI_IMPORT_BASE(MISDivergence, luminance_sum, pdf_sum, n_samples_methods, 
-                squared_sum, alphas, n_samples, batch_samples)
+                squared_sum, alphas, n_samples, batch_samples, n_methods)
     MI_IMPORT_TYPES()
 
 public:
@@ -155,7 +158,7 @@ public:
     void update_alphas() override;
 
 protected:
-    void reset() override {};
+    void reset() override;
 };
 
 // Specific MIS types: Linear2 divergence
@@ -163,7 +166,7 @@ template <typename Float, typename Spectrum>
 class MI_EXPORT_LIB MISLinear2 : public MISDivergence<Float, Spectrum> {
 
     MI_IMPORT_BASE(MISDivergence, luminance_sum, pdf_sum, n_samples_methods, 
-                squared_sum, alphas, n_samples, batch_samples)
+                squared_sum, alphas, n_samples, batch_samples, n_methods)
     MI_IMPORT_TYPES()
 
 public:
@@ -174,7 +177,7 @@ public:
     void update_alphas() override;
 
 protected:
-    void reset() override {};
+    void reset() override;
 };
 
 // Specific MIS types: Linear3 divergence
@@ -182,7 +185,7 @@ template <typename Float, typename Spectrum>
 class MI_EXPORT_LIB MISLinear3 : public MISDivergence<Float, Spectrum> {
 
     MI_IMPORT_BASE(MISDivergence, luminance_sum, pdf_sum, n_samples_methods, 
-                squared_sum, alphas, n_samples, batch_samples)
+                squared_sum, alphas, n_samples, batch_samples, n_methods, max_pdf)
     MI_IMPORT_TYPES()
 
 public:
@@ -192,12 +195,12 @@ public:
 
     void add_sampling_data(uint32_t sampling_method_id, 
         const Spectrum &luminance, 
-        const std::vector<Float> &pdfs);
+        const std::vector<Float> &pdfs) override;
 
     void update_alphas() override;
 
 protected:
-    void reset() override {};
+    void reset() override;
 
 private:
     std::map<uint32_t, Float> sum_mu;
@@ -208,7 +211,7 @@ template <typename Float, typename Spectrum>
 class MI_EXPORT_LIB MISTsallis : public MISDivergence<Float, Spectrum> {
 
     MI_IMPORT_BASE(MISDivergence, luminance_sum, pdf_sum, n_samples_methods, 
-                squared_sum, alphas, n_samples, batch_samples)
+                squared_sum, alphas, n_samples, batch_samples, max_pdf, n_methods)
     MI_IMPORT_TYPES()
 
 public:
@@ -216,11 +219,9 @@ public:
     
     MISTsallis(uint32_t n_methods, uint32_t batch_samples, Float gamma);
 
-    Float get_alpha(uint32_t sampling_method_id) const;
-
     void add_sampling_data(uint32_t sampling_method_id, 
         const Spectrum &luminance, 
-        const std::vector<Float> &pdfs);
+        const std::vector<Float> &pdfs) override;
 
     void update_alphas() override;
 

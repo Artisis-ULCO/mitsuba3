@@ -1,9 +1,13 @@
 <?xml version="1.0" ?><scene version="3.0.0">
 	<default name="integrator" value="directmis"/>
-	<default name="mis" value="linear1"/>
-	<default name="spp" value="100"/>
+	<default name="mis" value="linear3"/>
+	<default name="spp" value="10"/>
+	<!-- <default name="resy" value="1440"/>
+	<default name="resx" value="2560"/>
 	<default name="resy" value="720"/>
-	<default name="resx" value="1280"/>
+	<default name="resx" value="1280"/> -->
+	<default name="resy" value="360"/>
+	<default name="resx" value="640"/>
 	<!-- <default name="resy" value="10"/>
 	<default name="resx" value="10"/> -->
 	<!--<default name="max_depth" value="3" />-->

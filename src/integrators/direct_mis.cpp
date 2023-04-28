@@ -85,31 +85,13 @@ public:
     MI_IMPORT_TYPES(Scene, Sampler, Medium, Emitter, EmitterPtr, BSDF, BSDFPtr, MISModel)
 
     DirectIntegratorMIS(const Properties &props) : Base(props) {
-        if (props.has_property("shading_samples")
-            && (props.has_property("emitter_samples") ||
-                props.has_property("bsdf_samples"))) {
-            Throw("Cannot specify both 'shading_samples' and"
-                  " ('emitter_samples' and/or 'bsdf_samples').");
-        }
+        // if (!props.has_property("batch_samples")) {
+        //     Throw("Required property 'batch_samples'");
+        // }
 
-        /// Number of shading samples -- this parameter is a shorthand notation
-        /// to set both 'emitter_samples' and 'bsdf_samples' at the same time
-        size_t shading_samples = props.get<size_t>("shading_samples", 1);
-
-        /// Number of samples to take using the emitter sampling technique
-        m_emitter_samples = props.get<size_t>("emitter_samples", shading_samples);
-
-        /// Number of samples to take using the BSDF sampling technique
-        m_bsdf_samples = props.get<size_t>("bsdf_samples", shading_samples);
-
-        if (m_emitter_samples + m_bsdf_samples == 0)
-            Throw("Must have at least 1 BSDF or emitter sample!");
-
-        size_t sum    = m_emitter_samples + m_bsdf_samples;
-        m_weight_bsdf = 1.f / (ScalarFloat) m_bsdf_samples;
-        m_weight_lum  = 1.f / (ScalarFloat) m_emitter_samples;
-        m_frac_bsdf   = m_bsdf_samples / (ScalarFloat) sum;
-        m_frac_lum    = m_emitter_samples / (ScalarFloat) sum;
+        // [MIS] current direct integrator parameters has been removed
+        // use only batch samples information
+        // batch_samples = props.get<size_t>("batch_samples", 10);
     }
 
     std::pair<Spectrum, Mask> sample(const Scene *scene,
@@ -127,16 +109,7 @@ public:
 
         Spectrum result(0.f);
 
-        // Some information
-        // std::cout << "m_weight_bsdf: " << m_weight_bsdf << std::endl;
-        // std::cout << "m_weight_lum: " << m_weight_lum << std::endl;
-        // std::cout << "m_frac_bsdf: " << m_frac_bsdf << std::endl;
-        // std::cout << "m_frac_lum: " << m_frac_lum << std::endl;
-        // std::cout << "alpha bsdf: " << mis->get_alpha(0) << std::endl;
-        // std::cout << "alpha lum: " << mis->get_alpha(0) << std::endl;
-
         // ----------------------- Visible emitters -----------------------
-
         if (!m_hide_emitters) {
             EmitterPtr emitter_vis = si.emitter(scene, active);
             if (dr::any_or<true>(dr::neq(emitter_vis, nullptr)))
@@ -144,16 +117,22 @@ public:
         }
 
         active &= si.is_valid();
-        if (dr::none_or<false>(active)) {
-
-            // need to update sample
-            mis->update_n_samples();
-            // mis->update_alphas();
+        if (dr::none_or<false>(active))
             return { result, valid_ray };
-        }
+
+        // [MIS] compute number of samples and weight (only if ray is valid)
+        uint32_t batch_samples = mis->n_batch_samples();
+        Float alpha_bsdf = mis->get_alpha(0);
+        Float alpha_emitter = mis->get_alpha(1);
+
+        uint32_t m_bsdf_samples = (uint32_t)(batch_samples * alpha_bsdf);
+        uint32_t m_emitter_samples = batch_samples - m_bsdf_samples;
+
+        ScalarFloat m_weight_bsdf = 1.f / (ScalarFloat) m_bsdf_samples;
+        ScalarFloat m_weight_emitter  = 1.f / (ScalarFloat) m_emitter_samples;
+
 
         // ----------------------- Emitter sampling -----------------------
-
         BSDFContext ctx;
         BSDFPtr bsdf = si.bsdf(ray);
         auto flags = bsdf->flags();
@@ -178,13 +157,14 @@ public:
                 auto [bsdf_val, bsdf_pdf] = bsdf->eval_pdf(ctx, si, wo, active_e);
                 bsdf_val = si.to_world_mueller(bsdf_val, -wo, si.wi);
 
-                // [MIS]: Emitter / BSDF sampling
-                mis->add_sampling_data(0, bsdf_val * emitter_val, {ds.pdf * m_frac_lum, bsdf_pdf * m_frac_bsdf});
-                Float alpha = mis->get_alpha(0);
+                // [MIS]: add light sampling luminance and PDFs
+                mis->add_sampling_data(1, bsdf_val * emitter_val, {bsdf_pdf, ds.pdf});
 
-                Float mis_w = dr::select(ds.delta, Float(1.f), mis->mis_weight(alpha,
-                    ds.pdf * m_frac_lum, bsdf_pdf * m_frac_bsdf) * m_weight_lum);
+                Float mis_w = dr::select(ds.delta, Float(1.f), mis->mis_weight(alpha_emitter,
+                    ds.pdf, bsdf_pdf)) * m_weight_emitter;
                 result[active_e] += mis_w * bsdf_val * emitter_val;
+
+                mis->update_n_samples();
             }
         }
 
@@ -215,20 +195,18 @@ public:
                 Float emitter_pdf =
                     dr::select(delta, 0.f, scene->pdf_emitter_direction(si, ds, active_b));
 
-                // [MIS]: Emitter / BSDF sampling
-                mis->add_sampling_data(1, bsdf_val * emitter_val, {emitter_pdf * m_frac_lum, bs.pdf * m_frac_bsdf});
-                Float alpha = mis->get_alpha(1);
+                // [MIS]: add bsdf sampling luminance and PDFs
+                mis->add_sampling_data(0, bsdf_val * emitter_val, {bs.pdf, emitter_pdf});
 
                 result[active_b] +=
                     bsdf_val * emitter_val *
-                    mis->mis_weight(alpha, bs.pdf * m_frac_bsdf, emitter_pdf * m_frac_lum) *
-                    m_weight_bsdf;
+                    mis->mis_weight(alpha_bsdf, bs.pdf, emitter_pdf) * m_weight_bsdf;
+
+                mis->update_n_samples();
             }
         }
 
         // [MIS]: update alphas and number of samples
-        // TODO: can be improved
-        mis->update_n_samples();
         mis->update_alphas();
 
         return { result, valid_ray };
@@ -236,19 +214,16 @@ public:
 
     std::string to_string() const override {
         std::ostringstream oss;
-        oss << "DirectIntegrator[" << std::endl
-            << "  emitter_samples = " << m_emitter_samples << "," << std::endl
-            << "  bsdf_samples = " << m_bsdf_samples << std::endl
+        oss << "MISDirectIntegrator[" << std::endl
+            // << "  batch_samples = " << batch_samples << "," << std::endl
             << "]";
         return oss.str();
     }
 
     MI_DECLARE_CLASS()
+
 private:
-    size_t m_emitter_samples;
-    size_t m_bsdf_samples;
-    ScalarFloat m_frac_bsdf, m_frac_lum;
-    ScalarFloat m_weight_bsdf, m_weight_lum;
+    // uint32_t batch_samples; // require even number of samples
 };
 
 MI_IMPLEMENT_CLASS_VARIANT(DirectIntegratorMIS, SamplingIntegrator)

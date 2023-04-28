@@ -72,13 +72,13 @@ MI_VARIANT void Film<Float, Spectrum>::init_mis_model() {
         std::unique_ptr<MISModel> mis_div;
 
         if (mis_model_type == "balance")
-            mis_div = std::make_unique<MISBalance<Float, Spectrum>>(2);
+            mis_div = std::make_unique<MISBalance<Float, Spectrum>>(2, mis_batch_samples);
         else if (mis_model_type == "power")
-            mis_div = std::make_unique<MISPower<Float, Spectrum>>(2);
+            mis_div = std::make_unique<MISPower<Float, Spectrum>>(2, mis_batch_samples);
         else if (mis_model_type == "light")
-            mis_div = std::make_unique<MISLight<Float, Spectrum>>(2);
+            mis_div = std::make_unique<MISLight<Float, Spectrum>>(2, mis_batch_samples);
         else if (mis_model_type == "bsdf")
-            mis_div = std::make_unique<MISBSDF<Float, Spectrum>>(2);
+            mis_div = std::make_unique<MISBSDF<Float, Spectrum>>(2, mis_batch_samples);
         else if (mis_model_type == "linear1")
             mis_div = std::make_unique<MISLinear1<Float, Spectrum>>(2, mis_batch_samples);
         else if (mis_model_type == "linear2")
@@ -88,7 +88,7 @@ MI_VARIANT void Film<Float, Spectrum>::init_mis_model() {
         else if (mis_model_type == "tsallis")
             mis_div = std::make_unique<MISTsallis<Float, Spectrum>>(2, mis_batch_samples, mis_gamma);
         else
-            mis_div = std::make_unique<MISPower<Float, Spectrum>>(2);
+            mis_div = std::make_unique<MISPower<Float, Spectrum>>(2, mis_batch_samples);
 
         mis_models.push_back(std::move(mis_div));
     }
