@@ -53,7 +53,7 @@ MI_VARIANT Film<Float, Spectrum>::Film(const Properties &props) : Object() {
     // [MIS] get expected type
     mis_model_type = props.get<std::string>("mis", "power");
     mis_gamma = props.get<float>("gamma", 0.1f);
-    mis_batch_samples = props.get<uint32_t>("batch", 10);
+    mis_batch_samples = props.get<uint32_t>("batch", 20);
 
     init_mis_model();
 }

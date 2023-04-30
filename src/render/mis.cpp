@@ -58,9 +58,6 @@ MI_VARIANT void MISModel<Float, Spectrum>::add_sampling_data(uint32_t sampling_m
         pdf_sum[sampling_method_id][i] +=  pdfs[i];
     }
 
-    // increase number of sample for this method
-    n_samples_methods[sampling_method_id] += 1;
-
     Float mean_luminance = (luminance_sum[sampling_method_id] / n_samples_methods[sampling_method_id]);
     squared_sum[sampling_method_id] += (mean_luminance - lum) * (mean_luminance - lum);
 
@@ -82,6 +79,11 @@ MI_VARIANT void MISModel<Float, Spectrum>::add_sampling_data(uint32_t sampling_m
 
 MI_VARIANT void MISModel<Float, Spectrum>::update_n_samples() {
     n_samples++;
+}
+
+MI_VARIANT void MISModel<Float, Spectrum>::update_n_samples_method(uint32_t sampling_method_id) {
+    // increase number of sample for this method
+    n_samples_methods[sampling_method_id] += 1;
 }
 
 MI_VARIANT uint32_t MISModel<Float, Spectrum>::number_of_methods() const {

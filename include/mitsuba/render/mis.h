@@ -35,6 +35,7 @@ public:
     uint32_t n_batch_samples() const;
 
     void update_n_samples();
+    void update_n_samples_method(uint32_t sampling_method_id);
 
     uint32_t number_of_samples() const;
 

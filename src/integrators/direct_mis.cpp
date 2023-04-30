@@ -103,6 +103,8 @@ public:
                                      Mask active) const override {
         MI_MASKED_FUNCTION(ProfilerPhase::SamplingIntegratorSample, active);
 
+        // [MIS] TODO: check if necessary to sample individually (different ray)
+        // Classical balance heuristic gives better results when sample once 
         SurfaceInteraction3f si = scene->ray_intersect(
             ray, +RayFlags::All, /* coherent = */ true, active);
         Mask valid_ray = active && si.is_valid();
@@ -131,7 +133,6 @@ public:
         ScalarFloat m_weight_bsdf = 1.f / (ScalarFloat) m_bsdf_samples;
         ScalarFloat m_weight_emitter  = 1.f / (ScalarFloat) m_emitter_samples;
 
-
         // ----------------------- Emitter sampling -----------------------
         BSDFContext ctx;
         BSDFPtr bsdf = si.bsdf(ray);
@@ -140,6 +141,7 @@ public:
 
         if (dr::any_or<true>(sample_emitter)) {
             for (size_t i = 0; i < m_emitter_samples; ++i) {
+
                 Mask active_e = sample_emitter;
                 DirectionSample3f ds;
                 Spectrum emitter_val;
@@ -157,6 +159,9 @@ public:
                 auto [bsdf_val, bsdf_pdf] = bsdf->eval_pdf(ctx, si, wo, active_e);
                 bsdf_val = si.to_world_mueller(bsdf_val, -wo, si.wi);
 
+                // [MIS] add sample for light sampling method
+                mis->update_n_samples_method(1);
+
                 // [MIS]: add light sampling luminance and PDFs
                 mis->add_sampling_data(1, bsdf_val * emitter_val, {bsdf_pdf, ds.pdf});
 
@@ -170,6 +175,7 @@ public:
 
         // ------------------------ BSDF sampling -------------------------
         for (size_t i = 0; i < m_bsdf_samples; ++i) {
+
             auto [bs, bsdf_val] = bsdf->sample(ctx, si, sampler->next_1d(active),
                                                sampler->next_2d(active), active);
             bsdf_val = si.to_world_mueller(bsdf_val, -bs.wo, si.wi);
@@ -194,6 +200,9 @@ public:
 
                 Float emitter_pdf =
                     dr::select(delta, 0.f, scene->pdf_emitter_direction(si, ds, active_b));
+
+                // [MIS] add sample for bsdf sampling method
+                mis->update_n_samples_method(0);
 
                 // [MIS]: add bsdf sampling luminance and PDFs
                 mis->add_sampling_data(0, bsdf_val * emitter_val, {bs.pdf, emitter_pdf});
