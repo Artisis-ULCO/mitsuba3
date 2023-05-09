@@ -232,6 +232,7 @@ protected:
     // [MIS]
     std::string mis_model_type;
     uint32_t mis_batch_samples;
+    uint32_t mis_start_samples;
     Float mis_gamma;
     std::vector<std::unique_ptr<MISModel>> mis_models;
 

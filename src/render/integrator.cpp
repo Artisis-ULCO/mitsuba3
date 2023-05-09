@@ -418,8 +418,8 @@ SamplingIntegrator<Float, Spectrum>::render_sample(const Scene *scene,
 
     // TODO [MIS]: send to sample the MIS Model
     // MIS [Debug]
-    // if (mis_model->number_of_samples() % 20 == 0)
-    //     std::cout << "[Pixel: " << pos << "]" << std::endl;
+    // if (mis_model->number_of_samples() % 10 == 0)
+    std::cout << "[Pixel: " << pos << "]" << std::endl;
     auto [spec, valid] = sample(scene, sampler, ray, mis_model, medium,
                aovs + (has_alpha ? 5 : 4) /* skip R,G,B,[A],W */, active);
 

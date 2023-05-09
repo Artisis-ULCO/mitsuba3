@@ -142,6 +142,11 @@ public:
         if (dr::any_or<true>(sample_emitter)) {
             for (size_t i = 0; i < m_emitter_samples; ++i) {
 
+                mis->update_n_samples();
+
+                // [MIS] add sample for light sampling method
+                mis->update_n_samples_method(1);
+
                 Mask active_e = sample_emitter;
                 DirectionSample3f ds;
                 Spectrum emitter_val;
@@ -159,22 +164,22 @@ public:
                 auto [bsdf_val, bsdf_pdf] = bsdf->eval_pdf(ctx, si, wo, active_e);
                 bsdf_val = si.to_world_mueller(bsdf_val, -wo, si.wi);
 
-                // [MIS] add sample for light sampling method
-                mis->update_n_samples_method(1);
-
                 // [MIS]: add light sampling luminance and PDFs
                 mis->add_sampling_data(1, bsdf_val * emitter_val, {bsdf_pdf, ds.pdf});
 
                 Float mis_w = dr::select(ds.delta, Float(1.f), mis->mis_weight(alpha_emitter,
                     ds.pdf, bsdf_pdf)) * m_weight_emitter;
                 result[active_e] += mis_w * bsdf_val * emitter_val;
-
-                mis->update_n_samples();
             }
         }
 
         // ------------------------ BSDF sampling -------------------------
         for (size_t i = 0; i < m_bsdf_samples; ++i) {
+
+            mis->update_n_samples();
+
+            // [MIS] add sample for bsdf sampling method
+            mis->update_n_samples_method(0);
 
             auto [bs, bsdf_val] = bsdf->sample(ctx, si, sampler->next_1d(active),
                                                sampler->next_2d(active), active);
@@ -201,22 +206,25 @@ public:
                 Float emitter_pdf =
                     dr::select(delta, 0.f, scene->pdf_emitter_direction(si, ds, active_b));
 
-                // [MIS] add sample for bsdf sampling method
-                mis->update_n_samples_method(0);
-
                 // [MIS]: add bsdf sampling luminance and PDFs
                 mis->add_sampling_data(0, bsdf_val * emitter_val, {bs.pdf, emitter_pdf});
 
                 result[active_b] +=
                     bsdf_val * emitter_val *
                     mis->mis_weight(alpha_bsdf, bs.pdf, emitter_pdf) * m_weight_bsdf;
-
-                mis->update_n_samples();
+            } else {
+                // no emitter found, hence no contribution
+                mis->add_sampling_data(0, 0.f, {bs.pdf, 0.f});
             }
         }
 
         // [MIS]: update alphas and number of samples
-        mis->update_alphas();
+        mis->update_n_iterations();
+
+        if (mis->number_of_samples() >= mis->start_at_samples()) {
+            // std::cout << " -- start update of alphas" << std::endl;
+            mis->update_alphas();
+        }
 
         return { result, valid_ray };
     }
