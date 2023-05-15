@@ -81,7 +81,7 @@ template <typename Float, typename Spectrum>
 class DirectIntegrator : public SamplingIntegrator<Float, Spectrum> {
 public:
     MI_IMPORT_BASE(SamplingIntegrator, m_hide_emitters)
-    MI_IMPORT_TYPES(Scene, Sampler, Medium, Emitter, EmitterPtr, BSDF, BSDFPtr)
+    MI_IMPORT_TYPES(Scene, Sampler, Medium, Emitter, EmitterPtr, BSDF, BSDFPtr, GraphContainer)
 
     DirectIntegrator(const Properties &props) : Base(props) {
         if (props.has_property("shading_samples")
@@ -115,6 +115,7 @@ public:
                                      Sampler *sampler,
                                      const Vector2f & /* pos */,
                                      const RayDifferential3f &ray,
+                                     GraphContainer* /* container */,
                                      const Medium * /* medium */,
                                      Float * /* aovs */,
                                      Mask active) const override {

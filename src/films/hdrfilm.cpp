@@ -3,6 +3,7 @@
 #include <mitsuba/core/fstream.h>
 #include <mitsuba/core/spectrum.h>
 #include <mitsuba/core/string.h>
+#include <mitsuba/render/container.h>
 #include <mitsuba/render/film.h>
 #include <mitsuba/render/fwd.h>
 #include <mitsuba/render/imageblock.h>
@@ -136,7 +137,7 @@ class HDRFilm final : public Film<Float, Spectrum> {
 public:
     MI_IMPORT_BASE(Film, m_size, m_crop_size, m_crop_offset, m_sample_border,
                    m_filter, m_flags)
-    MI_IMPORT_TYPES(ImageBlock)
+    MI_IMPORT_TYPES(ImageBlock, GraphContainer)
 
     HDRFilm(const Properties &props) : Base(props) {
         std::string file_format = string::to_lower(
@@ -281,6 +282,11 @@ public:
         Assert(m_storage != nullptr);
         std::lock_guard<std::mutex> lock(m_mutex);
         m_storage->put_block(block);
+    }
+
+    void clear() override {
+        if (m_storage)
+            m_storage->clear();
     }
 
     TensorXf develop(bool raw = false) const override {
@@ -563,6 +569,16 @@ public:
             target->write(filename, m_file_format);
         } else {
             source->write(filename, m_file_format);
+        }
+
+        // [GNN] TODO: build connections and save data
+        for (uint32_t j = 0; j < m_crop_size.y(); j++) {
+            for (uint32_t i = 0; i < m_crop_size.x(); i++) {
+                
+                auto pos_f = Point2f(i, j);
+                GraphContainer* container = this->get_container(pos_f);
+
+            }
         }
     }
 

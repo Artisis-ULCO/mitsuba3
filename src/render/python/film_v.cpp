@@ -22,6 +22,10 @@ public:
         PYBIND11_OVERRIDE_PURE(void, Film, put_block, block);
     }
 
+    void clear() override {
+        PYBIND11_OVERRIDE_PURE(void, Film, clear);
+    }
+
     TensorXf develop(bool raw = false) const override {
         PYBIND11_OVERRIDE_PURE(TensorXf, Film, develop, raw);
     }

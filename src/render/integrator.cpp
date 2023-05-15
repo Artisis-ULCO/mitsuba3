@@ -389,6 +389,9 @@ SamplingIntegrator<Float, Spectrum>::render_sample(const Scene *scene,
     const bool has_alpha = has_flag(film->flags(), FilmFlags::Alpha);
     const bool box_filter = film->rfilter()->is_box_filter();
 
+    // [GNN] find current GNN container
+    GraphContainer *container = film->get_container(pos);
+
     ScalarVector2f scale = 1.f / ScalarVector2f(film->crop_size()),
                    offset = -ScalarVector2f(film->crop_offset()) * scale;
 
@@ -415,7 +418,7 @@ SamplingIntegrator<Float, Spectrum>::render_sample(const Scene *scene,
 
     const Medium *medium = sensor->medium();
 
-    auto [spec, valid] = sample(scene, sampler, pos, ray, medium,
+    auto [spec, valid] = sample(scene, sampler, pos, ray, container, medium,
                aovs + (has_alpha ? 5 : 4) /* skip R,G,B,[A],W */, active);
 
     UnpolarizedSpectrum spec_u = unpolarized_spectrum(ray_weight * spec);
@@ -455,6 +458,7 @@ SamplingIntegrator<Float, Spectrum>::sample(const Scene * /* scene */,
                                             Sampler * /* sampler */,
                                             const Vector2f & /* pos */,
                                             const RayDifferential3f & /* ray */,
+                                            GraphContainer * /* container*/,
                                             const Medium * /* medium */,
                                             Float * /* aovs */,
                                             Mask /* active */) const {

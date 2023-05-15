@@ -51,6 +51,7 @@ add_library(mitsuba-render OBJECT
   ${INC_DIR}/records.h
 
   bsdf.cpp         ${INC_DIR}/bsdf.h
+  container.cpp    ${INC_DIR}/container.h
   emitter.cpp      ${INC_DIR}/emitter.h
   endpoint.cpp     ${INC_DIR}/endpoint.h
   film.cpp         ${INC_DIR}/film.h
@@ -58,6 +59,9 @@ add_library(mitsuba-render OBJECT
   imageblock.cpp   ${INC_DIR}/imageblock.h
   integrator.cpp   ${INC_DIR}/integrator.h
                    ${INC_DIR}/interaction.h
+  node.cpp         ${INC_DIR}/node.h
+  connection.cpp   ${INC_DIR}/connection.h
+  graph.cpp        ${INC_DIR}/graph.h
   medium.cpp       ${INC_DIR}/medium.h
   mesh.cpp         ${INC_DIR}/mesh.h
   microfacet.cpp   ${INC_DIR}/microfacet.h

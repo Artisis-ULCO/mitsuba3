@@ -91,7 +91,7 @@ template <typename Float, typename Spectrum>
 class PathIntegratorGNN : public MonteCarloIntegrator<Float, Spectrum> {
 public:
     MI_IMPORT_BASE(MonteCarloIntegrator, m_max_depth, m_rr_depth, m_hide_emitters)
-    MI_IMPORT_TYPES(Scene, Sampler, Medium, Emitter, EmitterPtr, BSDF, BSDFPtr)
+    MI_IMPORT_TYPES(Scene, Sampler, Medium, Emitter, EmitterPtr, BSDF, BSDFPtr, GraphContainer)
 
     PathIntegratorGNN(const Properties &props) : Base(props) { }
 
@@ -99,6 +99,7 @@ public:
                                      Sampler *sampler,
                                      const Vector2f &pos,
                                      const RayDifferential3f &ray_,
+                                     GraphContainer * /* container */,
                                      const Medium * /* medium */,
                                      Float * /* aovs */,
                                      Bool active) const override {

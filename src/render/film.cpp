@@ -1,6 +1,7 @@
 #include <mitsuba/render/film.h>
 #include <mitsuba/core/plugin.h>
 #include <mitsuba/core/properties.h>
+#include <mitsuba/render/container.h>
 
 NAMESPACE_BEGIN(mitsuba)
 
@@ -48,14 +49,42 @@ MI_VARIANT Film<Float, Spectrum>::Film(const Properties &props) : Object() {
         m_filter =
             PluginManager::instance()->create_object<ReconstructionFilter>(
                 Properties("gaussian"));
+
+    // [GNN] get expected type
+    container_type = props.get<std::string>("gnn", "simple");
+
+    init_container();
 }
 
 MI_VARIANT Film<Float, Spectrum>::~Film() { }
+
+// [MIS]: common reinit function
+MI_VARIANT void Film<Float, Spectrum>::init_container() {
+
+    containers.clear();
+
+    // [MIS] initialize the number of sampling data
+    for(uint32_t i = 0; i < m_crop_size.x() * m_crop_size.y(); i++) {
+
+        // Fixed n_methods currently
+        std::unique_ptr<GraphContainer> container;
+
+        if (container_type == "simple")
+            container = std::make_unique<SimpleGraphContainer<Float, Spectrum>>(2, 4, 6);
+        else
+            container = std::make_unique<SimpleGraphContainer<Float, Spectrum>>(2, 4, 6);
+
+        containers.push_back(std::move(container));
+    }
+}
 
 MI_VARIANT void Film<Float, Spectrum>::traverse(TraversalCallback *callback) {
     callback->put_parameter("size", m_size, +ParamFlags::NonDifferentiable);
     callback->put_parameter("crop_size", m_crop_size, +ParamFlags::NonDifferentiable);
     callback->put_parameter("crop_offset", m_crop_offset, +ParamFlags::NonDifferentiable);
+
+    // [MIS]
+    callback->put_parameter("container_type", container_type, +ParamFlags::NonDifferentiable);
 }
 
 MI_VARIANT void Film<Float, Spectrum>::parameters_changed(const std::vector<std::string> &keys) {
@@ -68,6 +97,10 @@ MI_VARIANT void Film<Float, Spectrum>::parameters_changed(const std::vector<std:
             crop_size = ScalarPoint2u(m_size);
         if (!string::contains(keys, "crop_offset"))
             crop_offset = 0;
+    }
+
+    if (string::contains(keys, "container_type")) {
+        init_container();
     }
 
     set_crop_window(crop_offset, crop_size);

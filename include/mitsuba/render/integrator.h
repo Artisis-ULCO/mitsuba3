@@ -36,7 +36,7 @@ NAMESPACE_BEGIN(mitsuba)
 template <typename Float, typename Spectrum>
 class MI_EXPORT_LIB Integrator : public Object {
 public:
-    MI_IMPORT_TYPES(Scene, Sensor)
+    MI_IMPORT_TYPES(Scene, Sensor, GraphContainer)
 
     /**
      * \brief Render the scene
@@ -156,7 +156,7 @@ class MI_EXPORT_LIB SamplingIntegrator : public Integrator<Float, Spectrum> {
 public:
     MI_IMPORT_BASE(Integrator, should_stop, aov_names,
                     m_stop, m_timeout, m_render_timer, m_hide_emitters)
-    MI_IMPORT_TYPES(Scene, Sensor, Film, ImageBlock, Medium, Sampler)
+    MI_IMPORT_TYPES(Scene, Sensor, Film, ImageBlock, Medium, Sampler, GraphContainer)
 
     /**
      * \brief Sample the incident radiance along a ray.
@@ -201,6 +201,7 @@ public:
                                              Sampler *sampler,
                                              const Vector2f &sample_pos,
                                              const RayDifferential3f &ray,
+                                             GraphContainer *container,
                                              const Medium *medium = nullptr,
                                              Float *aovs = nullptr,
                                              Mask active = true) const;

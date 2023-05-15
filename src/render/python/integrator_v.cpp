@@ -52,7 +52,7 @@ ScopedSignalHandler::~ScopedSignalHandler() {
 /// Trampoline for derived types implemented in Python
 MI_VARIANT class PySamplingIntegrator : public SamplingIntegrator<Float, Spectrum> {
 public:
-    MI_IMPORT_TYPES(SamplingIntegrator, Scene, Sensor, Sampler, Medium)
+    MI_IMPORT_TYPES(SamplingIntegrator, Scene, Sensor, Sampler, Medium, GraphContainer)
 
     PySamplingIntegrator(const Properties &props) : SamplingIntegrator(props) {
         if constexpr (!dr::is_jit_v<Float>) {
@@ -81,6 +81,7 @@ public:
                                      Sampler *sampler,
                                      const Vector2f &pos,
                                      const RayDifferential3f &ray,
+                                     GraphContainer *container,
                                      const Medium *medium,
                                      Float *aovs,
                                      Mask active) const override {
@@ -90,7 +91,7 @@ public:
         if (sample_override) {
             using PyReturn = std::tuple<Spectrum, Mask, std::vector<Float>>;
             auto [spec, mask, aovs_] =
-                sample_override(scene, sampler, pos, ray, medium, active)
+                sample_override(scene, sampler, pos, ray, container, medium, active)
                     .template cast<PyReturn>();
 
             std::copy(aovs_.begin(), aovs_.end(), aovs);
@@ -178,7 +179,7 @@ MI_INSTANTIATE_CLASS(CppADIntegrator)
 
 MI_VARIANT class PyADIntegrator : public CppADIntegrator<Float, Spectrum> {
 public:
-    MI_IMPORT_TYPES(Scene, Sensor, Sampler, Medium, Emitter, EmitterPtr, BSDF, BSDFPtr)
+    MI_IMPORT_TYPES(Scene, Sensor, Sampler, Medium, Emitter, EmitterPtr, BSDF, BSDFPtr, GraphContainer)
     using Base = CppADIntegrator<Float, Spectrum>;
 
     PyADIntegrator(const Properties &props) : Base(props) {
@@ -209,6 +210,7 @@ public:
                                      Sampler *sampler,
                                      const Vector2f &pos,
                                      const RayDifferential3f &ray,
+                                     GraphContainer *container,
                                      const Medium * /* unused */,
                                      Float * /* unused */,
                                      Mask active) const override {
@@ -224,6 +226,7 @@ public:
                 "sampler"_a=sampler,
                 "pos"_a=pos,
                 "ray"_a=ray,
+                "container"_a=container,
                 "depth"_a=ray,
                 "δL"_a=py::none(),
                 "state_in"_a=py::none(),
@@ -290,14 +293,14 @@ MI_PY_EXPORT(Integrator) {
             "sample",
             [](const SamplingIntegrator *integrator, const Scene *scene,
                Sampler *sampler, const Vector2f &pos, const RayDifferential3f &ray,
-               const Medium *medium, Mask active) {
+               GraphContainer *container, const Medium *medium, Mask active) {
                 py::gil_scoped_release release;
                 std::vector<Float> aovs(integrator->aov_names().size(), 0.f);
                 auto [spec, mask] = integrator->sample(
-                    scene, sampler, pos, ray, medium, aovs.data(), active);
+                    scene, sampler, pos, ray, container, medium, aovs.data(), active);
                 return std::make_tuple(spec, mask, aovs);
             },
-            "scene"_a, "sampler"_a, "pos"_a, "ray"_a, "medium"_a = nullptr,
+            "scene"_a, "sampler"_a, "pos"_a, "ray"_a, "container"_a = nullptr, "medium"_a = nullptr,
             "active"_a = true, D(SamplingIntegrator, sample));
 
     MI_PY_REGISTER_OBJECT("register_integrator", Integrator)

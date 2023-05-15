@@ -87,7 +87,7 @@ template <typename Float, typename Spectrum>
 class AOVIntegrator final : public SamplingIntegrator<Float, Spectrum> {
 public:
     MI_IMPORT_BASE(SamplingIntegrator)
-    MI_IMPORT_TYPES(Scene, Sampler, Medium, BSDFPtr)
+    MI_IMPORT_TYPES(Scene, Sampler, Medium, BSDFPtr, GraphContainer)
 
     enum class Type {
         Albedo,
@@ -197,6 +197,7 @@ public:
                                      Sampler * sampler,
                                      const Vector2f &pos,
                                      const RayDifferential3f &ray,
+                                     GraphContainer * container,
                                      const Medium *medium,
                                      Float *aovs,
                                      Mask active) const override {
@@ -308,7 +309,7 @@ public:
 
                 case Type::IntegratorRGBA: {
                         std::pair<Spectrum, Mask> result_sub =
-                            m_integrators[ctr].first->sample(scene, sampler, pos, ray, medium, aovs, active);
+                            m_integrators[ctr].first->sample(scene, sampler, pos, ray, container, medium, aovs, active);
                         aovs += m_integrators[ctr].second;
                         Color3f rgb =
                             spectrum_to_color3f(result_sub.first, ray, active);
