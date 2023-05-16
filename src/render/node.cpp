@@ -1,4 +1,3 @@
-
 #include <mitsuba/mitsuba.h>
 #include <mitsuba/core/fwd.h>
 #include <mitsuba/core/vector.h>

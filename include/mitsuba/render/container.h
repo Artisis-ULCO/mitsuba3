@@ -5,6 +5,7 @@
 
 #include <mitsuba/render/connection.h>
 #include <mitsuba/render/graph.h>
+#include <mitsuba/render/scene.h>
 
 NAMESPACE_BEGIN(mitsuba)
 
@@ -12,11 +13,15 @@ template <typename Float, typename Spectrum>
 class MI_EXPORT_LIB GraphContainer : public Object {
 public:
 
-    MI_IMPORT_TYPES(GNNGraph, GNNConnection)
+    MI_IMPORT_TYPES(GNNGraph, GNNConnection, Scene)
 
+    uint32_t number_of_samples() const;
+    void update_n_samples();
+
+    void add_graph(GNNGraph graph);
     void add_graphs(std::vector<GNNGraph> graphs); 
 
-    virtual void build_connections() = 0;
+    virtual void build_connections(const Scene *scene) = 0;
 
     // Virtual destructor
     virtual ~GraphContainer();
@@ -27,6 +32,7 @@ protected:
     GraphContainer(uint32_t n_graphs, uint32_t n_nodes_per_graphs, uint32_t n_neighbors);
 
 protected:
+    uint32_t n_samples;
     uint32_t n_graphs;
     uint32_t n_nodes_per_graphs;
     uint32_t n_neighbors;
@@ -42,12 +48,12 @@ template <typename Float, typename Spectrum>
 class MI_EXPORT_LIB SimpleGraphContainer : public GraphContainer<Float, Spectrum> {
 
     MI_IMPORT_BASE(GraphContainer)
-    MI_IMPORT_TYPES()
+    MI_IMPORT_TYPES(Scene)
 
 public:
     SimpleGraphContainer(uint32_t n_graphs, uint32_t n_nodes_per_graphs, uint32_t n_neighbors);
 
-    virtual void build_connections();
+    virtual void build_connections(const Scene *scene);
 
     MI_DECLARE_CLASS()
 };

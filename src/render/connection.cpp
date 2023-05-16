@@ -22,8 +22,7 @@ MI_VARIANT typename GNNConnection<Float, Spectrum>::GNNNode GNNConnection<Float,
 };
 
 MI_VARIANT std::vector<Float> GNNConnection<Float, Spectrum>::get_properties() const {
-    std::vector<Float> values;
-    return values;
+    return data;
 };
 
 MI_VARIANT GNNConnection<Float, Spectrum>::~GNNConnection() {

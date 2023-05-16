@@ -22,10 +22,13 @@ public:
     // Virtual destructor
     virtual ~GNNConnection();
 
-    MI_DECLARE_CLASS()
-
-protected:
+    bool operator==(const GNNConnection &other) const{
+        return from_node == other.from_node and to_node == other.to_node;
+    }
+   
     GNNConnection(GNNNode from_node, GNNNode to_node, std::vector<Float> data);
+
+    MI_DECLARE_CLASS()
 
 protected:
     GNNNode from_node;

@@ -1,7 +1,6 @@
 #include <mitsuba/mitsuba.h>
-#include <mitsuba/render/fwd.h>
-#include <mitsuba/render/node.h>
-#include <mitsuba/render/connection.h>
+#include <mitsuba/core/fwd.h>
+#include <mitsuba/core/vector.h>
 #include <mitsuba/render/graph.h>
 
 NAMESPACE_BEGIN(mitsuba)
@@ -11,11 +10,9 @@ NAMESPACE_BEGIN(mitsuba)
 // =======================================================================
 
 MI_VARIANT GNNGraph<Float, Spectrum>::GNNGraph() : Object() {
-
 };
 
-MI_VARIANT GNNGraph<Float, Spectrum>::GNNGraph(std::vector<Float> targets) : Object(), targets(targets) {
-
+MI_VARIANT GNNGraph<Float, Spectrum>::GNNGraph(Point3f origin, std::vector<Float> targets) : Object(), origin(origin), targets(targets) {
 };
 
 MI_VARIANT std::vector<typename GNNGraph<Float, Spectrum>::GNNNode> GNNGraph<Float, Spectrum>::get_nodes() const {
@@ -24,6 +21,10 @@ MI_VARIANT std::vector<typename GNNGraph<Float, Spectrum>::GNNNode> GNNGraph<Flo
 
 MI_VARIANT std::vector<typename GNNGraph<Float, Spectrum>::GNNConnection> GNNGraph<Float, Spectrum>::get_connections() const {
     return connections;
+};
+
+MI_VARIANT typename GNNGraph<Float, Spectrum>::Point3f GNNGraph<Float, Spectrum>::get_origin() const {
+    return origin;
 };
 
 MI_VARIANT std::vector<Float> GNNGraph<Float, Spectrum>::get_targets() const {
@@ -36,7 +37,7 @@ MI_VARIANT typename GNNGraph<Float, Spectrum>::GNNNode GNNGraph<Float, Spectrum>
     return nodes.at(index);
 };
 
-MI_VARIANT uint32_t GNNGraph<Float, Spectrum>::get_node_index(const GNNNode &node) const {
+MI_VARIANT int GNNGraph<Float, Spectrum>::get_node_index(const GNNNode &node) const {
     
     auto it = std::find(nodes.cbegin(), nodes.cend(), node);
   
@@ -47,23 +48,10 @@ MI_VARIANT uint32_t GNNGraph<Float, Spectrum>::get_node_index(const GNNNode &nod
         return -1;
 };
 
-// MI_VARIANT std::vector<typename GNNGraph<Float, Spectrum>::GNNConnection> LightGraph<Float, Spectrum>::get_connections_from(const GNNNode &node) const {
+MI_VARIANT void GNNGraph<Float, Spectrum>::set_origin(Point3f origin) {
     
-//     std::vector<GNNConnection> found;
-
-//     // TODO
-
-//     return found;
-// };
-
-// MI_VARIANT std::vector<typename GNNGraph<Float, Spectrum>::GNNConnection> LightGraph<Float, Spectrum>::get_connections_to(const GNNNode &node) const {
-    
-//     std::vector<GNNConnection> found;
-
-//     // TODO
-
-//     return found;
-// };
+    this->origin = origin;
+};
 
 MI_VARIANT void GNNGraph<Float, Spectrum>::set_targets(std::vector<Float> data) {
     
@@ -72,7 +60,7 @@ MI_VARIANT void GNNGraph<Float, Spectrum>::set_targets(std::vector<Float> data) 
 
 MI_VARIANT bool GNNGraph<Float, Spectrum>::add_node(GNNNode node) {
     
-    if (this->get_node_index(node) != -1) {
+    if (get_node_index(node) != -1) {
         nodes.push_back(node);
         return true;
     }
@@ -82,10 +70,14 @@ MI_VARIANT bool GNNGraph<Float, Spectrum>::add_node(GNNNode node) {
 
 MI_VARIANT bool GNNGraph<Float, Spectrum>::add_connection(GNNConnection connection) {
     
-    // TODO: check if connection exists
-    connections.push_back(connection);
-
-    return true;
+    auto it = std::find(connections.cbegin(), connections.cend(), connection);
+        
+    if (it != connections.end()) {
+        connections.push_back(connection);  
+        return true;
+    }
+    
+    return false;
 };
 
 

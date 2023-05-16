@@ -6,7 +6,6 @@
 #include <mitsuba/core/spectrum.h>
 
 #include <mitsuba/core/object.h>
-// #include <mitsuba/core/spectrum.h>
 
 NAMESPACE_BEGIN(mitsuba)
 
@@ -26,14 +25,13 @@ public:
     virtual ~GNNNode();
 
     bool operator==(const GNNNode &other) const{
-        return position == other.position;
+        return position == other.position and normal == other.normal;
     }
 
-    MI_DECLARE_CLASS()
-
-protected:
     GNNNode(Point3f position, Vector3f normal, Spectrum radiance);
     GNNNode(Point3f position, Vector3f normal, Spectrum radiance, bool primary);
+
+    MI_DECLARE_CLASS()
 
 protected:
     Point3f position;
