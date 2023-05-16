@@ -21,7 +21,6 @@ public:
     bool can_build() const;
 
     uint32_t number_of_connections() const;
-    uint32_t number_of_graphs() const;
 
     void add_graph(GNNGraph* graph);
 
@@ -32,19 +31,22 @@ public:
 
     MI_DECLARE_CLASS()
 
+private:
+    bool add_node(GNNNode* node);
+    bool add_connection(GNNConnection* connection);
+
 protected:
-    GraphContainer(uint32_t build_at, uint32_t n_graphs, uint32_t n_nodes_per_graphs, uint32_t n_neighbors);
+    GraphContainer(uint32_t build_at, uint32_t n_nodes, uint32_t n_neighbors);
 
 protected:
     uint32_t build_at;
-    uint32_t n_graphs;
-    uint32_t n_nodes_per_graphs;
+    uint32_t n_nodes;
     uint32_t n_neighbors;
     uint32_t n_samples;
     std::string reference;
 
     // Store also graphs and connections
-    std::vector<ref<GNNGraph>> graphs;
+    std::vector<ref<GNNNode>> nodes;
     std::vector<ref<GNNConnection>> connections;
 };
 
@@ -52,11 +54,11 @@ protected:
 template <typename Float, typename Spectrum>
 class MI_EXPORT_LIB SimpleGraphContainer : public GraphContainer<Float, Spectrum> {
 
-    MI_IMPORT_BASE(GraphContainer, connections)
+    MI_IMPORT_BASE(GraphContainer, connections, nodes)
     MI_IMPORT_TYPES(Scene, GNNNode, GNNGraph, GNNConnection)
 
 public:
-    SimpleGraphContainer(uint32_t build_at, uint32_t n_graphs, uint32_t n_nodes_per_graphs, uint32_t n_neighbors);
+    SimpleGraphContainer(uint32_t build_at, uint32_t n_nodes, uint32_t n_neighbors);
 
     virtual void build_connections(const Scene *scene);
 
