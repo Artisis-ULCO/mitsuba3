@@ -9,8 +9,8 @@ NAMESPACE_BEGIN(mitsuba)
 //! @{ \name GraphContainer implementations
 // =======================================================================
 
-MI_VARIANT GraphContainer<Float, Spectrum>::GraphContainer(uint32_t n_graphs, uint32_t n_nodes_per_graphs, uint32_t n_neighbors) 
-    : Object(), n_graphs(n_graphs), n_nodes_per_graphs(n_nodes_per_graphs), n_neighbors(n_neighbors) {
+MI_VARIANT GraphContainer<Float, Spectrum>::GraphContainer(uint32_t build_at, uint32_t n_graphs, uint32_t n_nodes_per_graphs, uint32_t n_neighbors) 
+    : Object(), build_at(build_at), n_graphs(n_graphs), n_nodes_per_graphs(n_nodes_per_graphs), n_neighbors(n_neighbors), n_samples(0) {
 
 };
 
@@ -22,15 +22,29 @@ MI_VARIANT void GraphContainer<Float, Spectrum>::update_n_samples() {
     n_samples++;
 };
 
-MI_VARIANT void GraphContainer<Float, Spectrum>::add_graph(GNNGraph graph) {
-
-    this->graphs.push_back(graph);
+MI_VARIANT bool GraphContainer<Float, Spectrum>::can_track() const {
+    return n_samples < build_at;
 };
 
-MI_VARIANT void GraphContainer<Float, Spectrum>::add_graphs(std::vector<GNNGraph> graphs) {
+MI_VARIANT bool GraphContainer<Float, Spectrum>::can_build() const {
+    return n_samples == build_at;
+};
 
-    for (auto graph : graphs)
-        this->graphs.push_back(graph);
+MI_VARIANT uint32_t GraphContainer<Float, Spectrum>::number_of_graphs() const {
+    return graphs.size();
+};
+
+
+MI_VARIANT uint32_t GraphContainer<Float, Spectrum>::number_of_connections() const {
+    return connections.size();
+};
+
+MI_VARIANT void GraphContainer<Float, Spectrum>::add_graph(GNNGraph* graph) {
+
+    graphs.push_back(graph);
+
+    auto graph_connections = graph->get_connections();
+    connections.insert(connections.end(), graph_connections.begin(), graph_connections.end());
 };
 
 MI_VARIANT GraphContainer<Float, Spectrum>::~GraphContainer() {
@@ -44,74 +58,92 @@ MI_VARIANT GraphContainer<Float, Spectrum>::~GraphContainer() {
 //! @{ \name SimpleGraphContainer implementations
 // =======================================================================
 
-MI_VARIANT SimpleGraphContainer<Float, Spectrum>::SimpleGraphContainer(uint32_t n_graphs, uint32_t n_nodes_per_graphs, uint32_t n_neighbors) 
-    : Base(n_graphs, n_nodes_per_graphs, n_neighbors) {
+MI_VARIANT SimpleGraphContainer<Float, Spectrum>::SimpleGraphContainer(uint32_t build_at, uint32_t n_graphs, uint32_t n_nodes_per_graphs, uint32_t n_neighbors) 
+    : Base(build_at, n_graphs, n_nodes_per_graphs, n_neighbors) {
 
 };
 
 MI_VARIANT void SimpleGraphContainer<Float, Spectrum>::build_connections(const Scene *scene) {
     
+    if (this->graphs.size() < 2)
+        return;
+
     // randomly select graphs
-    std::vector<typename SimpleGraphContainer<Float, Spectrum>::GNNGraph> selected_graphs;
+    std::vector<ref<GNNGraph>> selected_graphs;
 
     for (uint32_t i = 0; i < this->n_graphs; i++) {
         auto selected = this->graphs[rand() % this->graphs.size()];
         selected_graphs.push_back(selected);
     }
 
+    for (auto graph : selected_graphs) {
 
-    // for graph in random.choices(pos_graphs, k=n_graphs):
-                
-    //     selected_nodes = random.choices(graph.nodes, k=n_nodes_per_graphs)
-    //     potential_neighbors = [ g for g in pos_graphs if g is not graph ]
+        // select a number of nodes for this graph
+        std::vector<ref<GNNNode>> selected_nodes;
+
+        for (uint32_t i = 0; i < this->n_nodes_per_graphs; i++) {
+            auto graph_nodes = graph->get_nodes();
+            auto node = graph_nodes[rand() % graph_nodes.size()];
+            selected_nodes.push_back(node);
+        }
+
+        // get number of graphs randomly (possible to include current graph?)
+        std::vector<ref<GNNGraph>> neighbor_graphs;
+
+        for (uint32_t i = 0; i < this->n_graphs; i++) {
+            auto selected = this->graphs[rand() % this->graphs.size()];
+
+            // insert only if different
+            if (selected != graph)
+                neighbor_graphs.push_back(selected);
+        }
+
+        if (neighbor_graphs.size() > 0) {
+
+            // try to create connection
+            for (auto node : selected_nodes) {
+
+                // select neighbor graph randomly
+                auto c_neighbor_graph = neighbor_graphs[rand() % neighbor_graphs.size()];
+
+                // select node from this graph
+                auto neighbor_nodes = c_neighbor_graph->get_nodes();
+                auto c_neighbor_node = neighbor_nodes[rand() % neighbor_nodes.size()];
+
+                // do necessary to create connection from near origin point
+                if (node->is_primary() and c_neighbor_node->is_primary())
+                    continue;
+
+                Point3f origin = node->get_position();
+                Point3f point = c_neighbor_node->get_position();
+
+                Vector3f direction = point - origin;
+                Vector3f normalized_d = direction / dr::sqrt(dr::sum(direction * direction));
+                auto ray = Ray3f(origin, normalized_d);
+
+                SurfaceInteraction3f si = scene->ray_intersect(ray, +RayFlags::All, true, /* active */ true);
         
-    //     # check if there is at least 1 potential neighbor
-    //     if len(potential_neighbors) > 0:
-    //         neighbors_graphs = random.choices([ g for g in pos_graphs if g is not graph], \
-    //                                 k=n_neighbors)
+                Float distance = dr::sqrt(dr::sum((point - origin) * (point - origin)));
 
-    //         # try now to create connection
-    //         for node in selected_nodes:
-                
-    //             # select randomly one neighbor graph
-    //             selected_graph = random.choice(neighbors_graphs)
+                if (si.is_valid() and si.t >= distance) {
+                    // add connection into current graph (from -> to)
+                    auto from_to_connection = new GNNConnection(node, c_neighbor_node, {si.t});
+                    graph->add_node(c_neighbor_node);
+                    graph->add_connection(from_to_connection);
 
-    //             # randomly select current neighbor graph node for the connection
-    //             neighbor_selected_node = random.choice(selected_graph.nodes)
+                    // add connection into neighbor graph (to -> from)
+                    auto to_from_connection = new GNNConnection(c_neighbor_node, node, {si.t});
+                    c_neighbor_graph->add_node(node);
+                    c_neighbor_graph->add_connection(to_from_connection);
 
-    //             # do not continue the selected nodes are primary rays or origin
-    //             if node.primary and neighbor_selected_node.primary:
-    //                 continue
-                
-    //             # create Ray from current node
-    //             origin, point = mi.Vector3f(node.position), mi.Vector3f(neighbor_selected_node.position)
+                    // also inside current container
+                    connections.push_back(from_to_connection);
+                    connections.push_back(to_from_connection);
+                }
+            }
+        }
 
-    //             # get direction and create new ray
-    //             direction = point - origin
-    //             normalized_d = direction / np.sqrt(np.sum(direction ** 2))
-    //             ray = mi.Ray3f(origin, normalized_d)
-
-    //             # try intersect using this ray
-    //             si = scene.ray_intersect(ray)
-                
-    //             # if connections exists, then the node is also attached to the graph
-    //             # new bi-directionnal connections are created between `node` and 
-    //             #  `neighbor_selected_node` with distance data
-    //             if si.is_valid() and si.t >= math.dist(point, origin):
-
-    //                 # add connection into current graph (from -> to)
-    //                 connection = RayConnection(node, neighbor_selected_node, \
-    //                     {'distance': si.t}, ConnectionTag.BUILT)
-    //                 self._n_built_nodes += graph.add_node(neighbor_selected_node)
-    //                 self._n_built_connections += graph.add_connection(connection)
-
-    //                 # add connection into neighbor graph (to -> from)
-    //                 connection = RayConnection(neighbor_selected_node, node, \
-    //                     {'distance': si.t}, ConnectionTag.BUILT)
-    //                 self._n_built_nodes += selected_graph.add_node(node)
-    //                 self._n_built_connections += selected_graph.add_connection(connection)
-                    
-    // return True
+    }
 };
 
 

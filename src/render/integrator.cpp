@@ -421,6 +421,18 @@ SamplingIntegrator<Float, Spectrum>::render_sample(const Scene *scene,
     auto [spec, valid] = sample(scene, sampler, pos, ray, container, medium,
                aovs + (has_alpha ? 5 : 4) /* skip R,G,B,[A],W */, active);
 
+    // [GNN] update number of samples
+    container->update_n_samples();
+
+    // std::cout << pos << " @sample " << container->number_of_samples() << " => container has " << container->number_of_connections() << std::endl;
+    // [GNN] build connections
+    if (container->can_build()) {
+        container->build_connections(scene);
+
+        // TODO: also need to stack graphs!
+        // std::cout << "@pos: " << pos << " container has now " << container->number_of_connections() << std::endl;
+    }
+
     UnpolarizedSpectrum spec_u = unpolarized_spectrum(ray_weight * spec);
 
     if (unlikely(has_flag(film->flags(), FilmFlags::Special))) {

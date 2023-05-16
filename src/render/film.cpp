@@ -69,10 +69,11 @@ MI_VARIANT void Film<Float, Spectrum>::init_container() {
         // Fixed n_methods currently
         std::unique_ptr<GraphContainer> container;
 
+        // params: build_at, n_graphs, n_nodes_per_graph, n_neighbors
         if (container_type == "simple")
-            container = std::make_unique<SimpleGraphContainer<Float, Spectrum>>(2, 4, 6);
+            container = std::make_unique<SimpleGraphContainer<Float, Spectrum>>(20, 20, 20, 10);
         else
-            container = std::make_unique<SimpleGraphContainer<Float, Spectrum>>(2, 4, 6);
+            container = std::make_unique<SimpleGraphContainer<Float, Spectrum>>(20, 20, 20, 10);
 
         containers.push_back(std::move(container));
     }

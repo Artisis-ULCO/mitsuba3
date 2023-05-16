@@ -13,13 +13,17 @@ template <typename Float, typename Spectrum>
 class MI_EXPORT_LIB GraphContainer : public Object {
 public:
 
-    MI_IMPORT_TYPES(GNNGraph, GNNConnection, Scene)
+    MI_IMPORT_TYPES(GNNNode, GNNGraph, GNNConnection, Scene)
 
     uint32_t number_of_samples() const;
     void update_n_samples();
+    bool can_track() const;
+    bool can_build() const;
 
-    void add_graph(GNNGraph graph);
-    void add_graphs(std::vector<GNNGraph> graphs); 
+    uint32_t number_of_connections() const;
+    uint32_t number_of_graphs() const;
+
+    void add_graph(GNNGraph* graph);
 
     virtual void build_connections(const Scene *scene) = 0;
 
@@ -29,29 +33,30 @@ public:
     MI_DECLARE_CLASS()
 
 protected:
-    GraphContainer(uint32_t n_graphs, uint32_t n_nodes_per_graphs, uint32_t n_neighbors);
+    GraphContainer(uint32_t build_at, uint32_t n_graphs, uint32_t n_nodes_per_graphs, uint32_t n_neighbors);
 
 protected:
-    uint32_t n_samples;
+    uint32_t build_at;
     uint32_t n_graphs;
     uint32_t n_nodes_per_graphs;
     uint32_t n_neighbors;
+    uint32_t n_samples;
     std::string reference;
 
     // Store also graphs and connections
-    std::vector<GNNGraph> graphs;
-    std::vector<GNNConnection> connections;
+    std::vector<ref<GNNGraph>> graphs;
+    std::vector<ref<GNNConnection>> connections;
 };
 
 // Specific Container types: SimpleGraphContainer
 template <typename Float, typename Spectrum>
 class MI_EXPORT_LIB SimpleGraphContainer : public GraphContainer<Float, Spectrum> {
 
-    MI_IMPORT_BASE(GraphContainer)
-    MI_IMPORT_TYPES(Scene)
+    MI_IMPORT_BASE(GraphContainer, connections)
+    MI_IMPORT_TYPES(Scene, GNNNode, GNNGraph, GNNConnection)
 
 public:
-    SimpleGraphContainer(uint32_t n_graphs, uint32_t n_nodes_per_graphs, uint32_t n_neighbors);
+    SimpleGraphContainer(uint32_t build_at, uint32_t n_graphs, uint32_t n_nodes_per_graphs, uint32_t n_neighbors);
 
     virtual void build_connections(const Scene *scene);
 

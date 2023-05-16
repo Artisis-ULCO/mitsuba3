@@ -8,16 +8,16 @@ NAMESPACE_BEGIN(mitsuba)
 //! @{ \name GNNConnection implementations
 // =======================================================================
 
-MI_VARIANT GNNConnection<Float, Spectrum>::GNNConnection(GNNNode from_node, GNNNode to_node, std::vector<Float> data) 
+MI_VARIANT GNNConnection<Float, Spectrum>::GNNConnection(GNNNode* from_node, GNNNode* to_node, std::vector<Float> data) 
     : Object(), from_node(from_node), to_node(to_node), data(data) {
 
 };
 
-MI_VARIANT typename GNNConnection<Float, Spectrum>::GNNNode GNNConnection<Float, Spectrum>::from() const {
+MI_VARIANT ref<typename GNNConnection<Float, Spectrum>::GNNNode> GNNConnection<Float, Spectrum>::from() const {
     return from_node;
 };
 
-MI_VARIANT typename GNNConnection<Float, Spectrum>::GNNNode GNNConnection<Float, Spectrum>::to() const {
+MI_VARIANT ref<typename GNNConnection<Float, Spectrum>::GNNNode> GNNConnection<Float, Spectrum>::to() const {
     return to_node;
 };
 

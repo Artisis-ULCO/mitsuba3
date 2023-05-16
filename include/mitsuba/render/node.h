@@ -18,6 +18,7 @@ public:
     Point3f get_position() const;
     Vector3f get_normal() const;
     Spectrum get_radiance() const;
+    bool is_primary() const;
 
     virtual std::vector<Float> get_properties() const;
 

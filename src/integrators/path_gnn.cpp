@@ -6,6 +6,10 @@
 #include <mitsuba/render/integrator.h>
 #include <mitsuba/render/records.h>
 
+#include <mitsuba/render/node.h>
+#include <mitsuba/render/connection.h>
+#include <mitsuba/render/graph.h>
+
 #include <iostream>
 #include <fstream>
 
@@ -91,7 +95,8 @@ template <typename Float, typename Spectrum>
 class PathIntegratorGNN : public MonteCarloIntegrator<Float, Spectrum> {
 public:
     MI_IMPORT_BASE(MonteCarloIntegrator, m_max_depth, m_rr_depth, m_hide_emitters)
-    MI_IMPORT_TYPES(Scene, Sampler, Medium, Emitter, EmitterPtr, BSDF, BSDFPtr, GraphContainer)
+    MI_IMPORT_TYPES(Scene, Sampler, Medium, Emitter, EmitterPtr, BSDF, BSDFPtr, GraphContainer,
+        GNNNode, GNNConnection, GNNGraph)
 
     PathIntegratorGNN(const Properties &props) : Base(props) { }
 
@@ -99,7 +104,7 @@ public:
                                      Sampler *sampler,
                                      const Vector2f &pos,
                                      const RayDifferential3f &ray_,
-                                     GraphContainer * /* container */,
+                                     GraphContainer * container,
                                      const Medium * /* medium */,
                                      Float * /* aovs */,
                                      Bool active) const override {
@@ -146,11 +151,26 @@ public:
         loop.set_max_iterations(m_max_depth);
 
         // origin;
-        std::ofstream gnn_data_file;
-        gnn_data_file.open(scene->get_logfile(), std::ios::out | std::ios::app);
-        gnn_data_file << pos.x() << "," << pos.y() << ";";
-        gnn_data_file << ray.o.x() << "," << ray.o.y() << "," << ray.o.z() << ";";
-        gnn_data_file << ray.d.x() << "," << ray.d.y() << "," << ray.d.z();
+        // std::ofstream gnn_data_file;
+        // gnn_data_file.open(scene->get_logfile(), std::ios::out | std::ios::app);
+        // gnn_data_file << pos.x() << "," << pos.y() << ";";
+        // gnn_data_file << ray.o.x() << "," << ray.o.y() << "," << ray.o.z() << ";";
+        // gnn_data_file << ray.d.x() << "," << ray.d.y() << "," << ray.d.z();
+
+        // [GNN] Create new graph
+        GNNGraph* graph;
+        
+        // [GNN] default perceived spectrum
+        Spectrum empty = 0.f;
+        GNNNode* from_node;
+        
+        if (container->can_track()) {
+            graph = new GNNGraph();
+            graph->set_origin(ray.o);
+
+            from_node = new GNNNode(ray.o, Vector3f(1.f, 1.f, 1.f), empty, true);
+            graph->add_node(from_node);
+        }
 
         while (loop(active)) {
             /* dr::Loop implicitly masks all code in the loop using the 'active'
@@ -197,12 +217,12 @@ public:
             //    (resp. throughput) bsdf information
             // distance :: bsdf_weight :: p :: n;
             // => store only valid intersection?
-            gnn_data_file << ";" << si.t << "::";
-            gnn_data_file << si.is_valid() << "::";
-            gnn_data_file << active_next << "::";
-            gnn_data_file << bsdf_weight.x() << "," << bsdf_weight.y() << "," << bsdf_weight.z() << "::";
-            gnn_data_file << si.p.x() << "," << si.p.y() << "," << si.p.z() << "::";
-            gnn_data_file << si.n.x() << "," << si.n.y() << "," << si.n.z() << "::";
+            // gnn_data_file << ";" << si.t << "::";
+            // gnn_data_file << si.is_valid() << "::";
+            // gnn_data_file << active_next << "::";
+            // gnn_data_file << bsdf_weight.x() << "," << bsdf_weight.y() << "," << bsdf_weight.z() << "::";
+            // gnn_data_file << si.p.x() << "," << si.p.y() << "," << si.p.z() << "::";
+            // gnn_data_file << si.n.x() << "," << si.n.y() << "," << si.n.z() << "::";
             
 
             if (dr::none_or<false>(active_next))
@@ -263,9 +283,20 @@ public:
             // Save GNN Data
             // Save only current perceived light
             // store also throughput and intermediate result from light sampling (next event)
-            gnn_data_file << throughput.x() << "," << throughput.y() << "," << throughput.z() << "::";
-            gnn_data_file << c_result.x() << "," << c_result.y() << "," << c_result.z();
+            // gnn_data_file << throughput.x() << "," << throughput.y() << "," << throughput.z() << "::";
+            // gnn_data_file << c_result.x() << "," << c_result.y() << "," << c_result.z();
 
+            // TODO: save also throughput and/or bsdf_weight
+            // [GNN] create `to` node and add connection
+            if (container->can_track()) {
+                GNNNode* to_node = new GNNNode(si.p, si.n, c_result);
+                GNNConnection* connection = new GNNConnection(from_node, to_node, {si.t});
+                graph->add_node(to_node);
+                graph->add_connection(connection);
+
+                // specify next `from_node` pointer
+                from_node = to_node;
+            }
             // ---------------------- BSDF sampling ----------------------
 
             bsdf_weight = si.to_world_mueller(bsdf_weight, -bsdf_sample.wo, si.wi);
@@ -318,11 +349,22 @@ public:
 
         }
 
-        gnn_data_file << ";";
-        gnn_data_file << result.x() << "," << result.y() << "," << result.z();
-        gnn_data_file << std::endl;
+        // gnn_data_file << ";";
+        // gnn_data_file << result.x() << "," << result.y() << "," << result.z();
+        // gnn_data_file << std::endl;
 
-        gnn_data_file.close();
+        // gnn_data_file.close();
+
+        // [GNN] set current obtained targets
+        if (container->can_track()) {
+            graph->set_targets({result.x(), result.y(), result.z()});
+
+            // add graph to container
+            container->add_graph(graph);
+        }
+
+        // std::cout << " -- Graph has: " << graph->get_connections().size() << " connections" << std::endl;
+        // std::cout << " -- Graph has: " << graph->get_nodes().size() << " nodes" << std::endl;
 
         return {
             /* spec  = */ dr::select(valid_ray, result, 0.f),

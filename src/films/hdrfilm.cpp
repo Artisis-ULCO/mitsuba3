@@ -578,6 +578,9 @@ public:
                 auto pos_f = Point2f(i, j);
                 GraphContainer* container = this->get_container(pos_f);
 
+                // TODO: update current expected targets (with reference data before saving)
+                // Save as JSON file?
+
             }
         }
     }

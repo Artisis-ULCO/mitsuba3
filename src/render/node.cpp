@@ -43,6 +43,10 @@ MI_VARIANT Spectrum GNNNode<Float, Spectrum>::get_radiance() const {
         
 };
 
+MI_VARIANT bool GNNNode<Float, Spectrum>::is_primary() const {
+    return primary;
+};
+
 MI_VARIANT std::vector<Float> GNNNode<Float, Spectrum>::get_properties() const {
     std::vector<Float> values;
     return values;
