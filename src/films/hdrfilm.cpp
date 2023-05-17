@@ -7,6 +7,13 @@
 #include <mitsuba/render/film.h>
 #include <mitsuba/render/fwd.h>
 #include <mitsuba/render/imageblock.h>
+#include <mitsuba/core/progress.h>
+
+#include <nanothread/nanothread.h>
+
+#include <filesystem>
+#include <fstream>
+#include <mitsuba/json.hpp>
 
 #include <mutex>
 
@@ -571,18 +578,59 @@ public:
             source->write(filename, m_file_format);
         }
 
-        // [GNN] TODO: build connections and save data
-        for (uint32_t j = 0; j < m_crop_size.y(); j++) {
-            for (uint32_t i = 0; i < m_crop_size.x(); i++) {
+        // std::mutex mutex;
+        // ref<ProgressReporter> progress = new ProgressReporter("GNN save");
+        // std::atomic<size_t> rows_done(0);
+        // auto result = develop().array();
+        // std::cout << "Buffer has size of: " << result.size() << std::endl;
+
+
+        // ThreadEnvironment env;
+        // dr::parallel_for(
+        //     dr::blocked_range<size_t>(0, m_crop_size.y(), 1),
+        //     [&](const dr::blocked_range<size_t> &range) {
+        //         ScopedSetThreadEnvironment set_env(env);
                 
-                auto pos_f = Point2f(i, j);
-                GraphContainer* container = this->get_container(pos_f);
+        //         auto y = range.begin();
 
-                // TODO: update current expected targets (with reference data before saving)
-                // Save as JSON file?
+        //         nlohmann::json json_data;
+        //         std::string j_str = std::to_string(y);
 
-            }
-        }
+        //         while (j_str.length() < 6)
+        //             j_str = "0" + j_str;
+
+        //         std::string output_file = output_folder + "/" + output_folder + "_" + j_str + ".json";
+        //         std::ofstream output(output_file);
+
+        //         for (uint32_t x = 0; x < m_crop_size.x(); x++) {
+                    
+        //             // get expected pixel radiance
+        //             auto from_index = 3 * (y * m_crop_size.x() + x);
+        //             nlohmann::json y_radiances = nlohmann::json::array();
+                    
+        //             y_radiances.push_back(result[from_index]);
+        //             y_radiances.push_back(result[from_index + 1]);
+        //             y_radiances.push_back(result[from_index + 2]);
+                    
+        //             auto pos_f = Point2f(x, y);
+        //             std::string index = std::to_string(x) + "," + std::to_string(y);
+
+        //             GraphContainer* container = this->get_container(pos_f);
+        //             json_data[index] = container->json();
+        //             json_data[index]["y"] = y_radiances;
+        //         }
+
+        //         std::lock_guard<std::mutex> lock(mutex);
+        //         rows_done += 1;
+        //         progress->update(rows_done / (ScalarFloat) m_crop_size.y());
+
+        //         // write prettified JSON to another file
+        //         output << json_data << std::endl;
+        //         output.close();
+        //     }
+        // );
+
+        // auto data = source->data();
     }
 
     void schedule_storage() override {

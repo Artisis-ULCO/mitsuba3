@@ -37,7 +37,6 @@ template <typename Float, typename Spectrum> class MeshAttribute;
 // [GNN]
 template <typename Float, typename Spectrum> class GNNNode;
 template <typename Float, typename Spectrum> class GNNConnection;
-template <typename Float, typename Spectrum> class GNNGraph;
 template <typename Float, typename Spectrum> class GraphContainer;
 template <typename Float, typename Spectrum> class SimpleGraphContainer;
 
@@ -105,8 +104,7 @@ template <typename Float_, typename Spectrum_> struct RenderAliases {
 
     // [GNN]
     using GNNNode                = mitsuba::GNNNode<FloatU, SpectrumU>;
-    using GNNConnection          = mitsuba::GNNConnection<FloatU, SpectrumU>;                        
-    using GNNGraph               = mitsuba::GNNGraph<FloatU, SpectrumU>;                             
+    using GNNConnection          = mitsuba::GNNConnection<FloatU, SpectrumU>;                                              
     using GraphContainer         = mitsuba::GraphContainer<FloatU, SpectrumU>;                         
     using SimpleGraphContainer   = mitsuba::SimpleGraphContainer<FloatU, SpectrumU>;                         
     
@@ -185,7 +183,6 @@ template <typename Float_, typename Spectrum_> struct RenderAliases {
     using AdjointIntegrator      = typename RenderAliases::AdjointIntegrator;                      \
     using GNNNode                = typename RenderAliases::GNNNode;                                \
     using GNNConnection          = typename RenderAliases::GNNConnection;                          \
-    using GNNGraph               = typename RenderAliases::GNNGraph;                               \
     using GraphContainer         = typename RenderAliases::GraphContainer;                         \
     using SimpleGraphContainer   = typename RenderAliases::SimpleGraphContainer;                   \
     using BSDF                   = typename RenderAliases::BSDF;                                   \

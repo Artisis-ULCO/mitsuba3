@@ -61,7 +61,6 @@ add_library(mitsuba-render OBJECT
                    ${INC_DIR}/interaction.h
   node.cpp         ${INC_DIR}/node.h
   connection.cpp   ${INC_DIR}/connection.h
-  graph.cpp        ${INC_DIR}/graph.h
   medium.cpp       ${INC_DIR}/medium.h
   mesh.cpp         ${INC_DIR}/mesh.h
   microfacet.cpp   ${INC_DIR}/microfacet.h

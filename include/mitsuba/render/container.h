@@ -3,8 +3,8 @@
 #include <mitsuba/mitsuba.h>
 #include <mitsuba/core/object.h>
 
+#include <mitsuba/render/node.h>
 #include <mitsuba/render/connection.h>
-#include <mitsuba/render/graph.h>
 #include <mitsuba/render/scene.h>
 
 #include <mitsuba/json.hpp>
@@ -15,17 +15,24 @@ template <typename Float, typename Spectrum>
 class MI_EXPORT_LIB GraphContainer : public Object {
 public:
 
-    MI_IMPORT_TYPES(GNNNode, GNNGraph, GNNConnection, Scene)
+    MI_IMPORT_TYPES(GNNNode, GNNConnection, Scene)
 
     uint32_t number_of_samples() const;
+    Spectrum get_radiance() const;
+
     void update_n_samples();
     bool can_track() const;
     bool can_build() const;
+    nlohmann::json json() const;
 
     uint32_t number_of_connections() const;
     int get_node_index(const GNNNode* node) const;
 
-    void add_graph(GNNGraph* graph);
+    bool add_node(GNNNode* node);
+    bool add_connection(GNNConnection* connection);
+    void add_radiance(Spectrum radiance);
+
+    void clear();
 
     virtual void build_connections(const Scene *scene) = 0;
     virtual void prepare_export() = 0;
@@ -34,10 +41,6 @@ public:
     virtual ~GraphContainer();
 
     MI_DECLARE_CLASS()
-
-private:
-    bool add_node(GNNNode* node);
-    bool add_connection(GNNConnection* connection);
 
 protected:
     GraphContainer(uint32_t build_at, uint32_t n_nodes, uint32_t n_neighbors);
@@ -48,10 +51,12 @@ protected:
     uint32_t n_neighbors;
     uint32_t n_samples;
     bool export_done;
-    nlohmann::json json_data;
+    std::string json_data_str;
+
+    // accumulated radiances at this point
+    std::vector<Spectrum> radiances;
 
     // Store also graphs, nodes and connections
-    std::vector<ref<GNNGraph>> graphs; // keeping track of graph data enable to ensure clear ptr
     std::vector<ref<GNNNode>> nodes;
     std::vector<ref<GNNConnection>> connections;
 };
@@ -60,8 +65,8 @@ protected:
 template <typename Float, typename Spectrum>
 class MI_EXPORT_LIB SimpleGraphContainer : public GraphContainer<Float, Spectrum> {
 
-    MI_IMPORT_BASE(GraphContainer, connections, nodes, graphs, export_done)
-    MI_IMPORT_TYPES(Scene, GNNNode, GNNGraph, GNNConnection)
+    MI_IMPORT_BASE(GraphContainer, connections, nodes, export_done)
+    MI_IMPORT_TYPES(Scene, GNNNode, GNNConnection)
 
 public:
     SimpleGraphContainer(uint32_t build_at, uint32_t n_nodes, uint32_t n_neighbors);

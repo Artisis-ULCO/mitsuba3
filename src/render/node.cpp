@@ -51,11 +51,22 @@ MI_VARIANT bool GNNNode<Float, Spectrum>::is_primary() const {
 MI_VARIANT std::vector<Float> GNNNode<Float, Spectrum>::get_properties() const {
     std::vector<Float> values;
 
-    values.insert(values.end(), position.begin(), position.end());
-    values.insert(values.end(), normal.begin(), normal.end());
+    // add position
+    values.push_back(position.x());
+    values.push_back(position.y());
+    values.push_back(position.z());
 
-    // check get radiance
-    values.insert(values.end(), get_radiance().begin(), get_radiance().end());
+    // add normal
+    values.push_back(normal.x());
+    values.push_back(normal.y());
+    values.push_back(normal.z());
+
+    // get radiance and push back channels
+    Spectrum radiance = get_radiance();
+
+    values.push_back(radiance.x());
+    values.push_back(radiance.y());
+    values.push_back(radiance.z());
 
     return values;
 }
@@ -64,9 +75,21 @@ MI_VARIANT nlohmann::json GNNNode<Float, Spectrum>::to_json() const {
 
     nlohmann::json json;
 
-    // simplified json extraction
-    json["attr"] = nlohmann::json::parse(get_properties());
-    json["pos"] = nlohmann::json::parse(position);
+    auto properties = get_properties();
+
+    // properties extraction
+    nlohmann::json v_properties = nlohmann::json::array();
+    for (auto prop : properties)
+        v_properties.push_back(prop);
+    json["attr"] = v_properties;
+
+    // position extraction
+    nlohmann::json v_position = nlohmann::json::array();
+    v_position.push_back(position.x());
+    v_position.push_back(position.y());
+    v_position.push_back(position.z());
+
+    json["pos"] = v_position;
 
     return json;
 }

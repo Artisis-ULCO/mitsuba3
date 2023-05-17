@@ -1,7 +1,7 @@
 #include <mitsuba/json.hpp>
 #include <mitsuba/render/fwd.h>
 // #include <mitsuba/render/node.h>
-#include <mitsuba/render/graph.h>
+#include <mitsuba/render/connection.h>
 
 NAMESPACE_BEGIN(mitsuba)
 
@@ -30,8 +30,13 @@ MI_VARIANT nlohmann::json GNNConnection<Float, Spectrum>::to_json() const {
 
     nlohmann::json json;
 
-    // simplified json extraction
-    json["attr"] = nlohmann::json::parse(get_properties());
+    auto properties = get_properties();
+
+    // properties extraction
+    nlohmann::json v_properties = nlohmann::json::array();
+    for (auto prop : properties)
+        v_properties.push_back(prop);
+    json["attr"] = v_properties;
 
     return json;
 }

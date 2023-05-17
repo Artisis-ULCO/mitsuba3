@@ -8,7 +8,6 @@
 
 #include <mitsuba/render/node.h>
 #include <mitsuba/render/connection.h>
-#include <mitsuba/render/graph.h>
 
 #include <iostream>
 #include <fstream>
@@ -96,7 +95,7 @@ class PathIntegratorGNN : public MonteCarloIntegrator<Float, Spectrum> {
 public:
     MI_IMPORT_BASE(MonteCarloIntegrator, m_max_depth, m_rr_depth, m_hide_emitters)
     MI_IMPORT_TYPES(Scene, Sampler, Medium, Emitter, EmitterPtr, BSDF, BSDFPtr, GraphContainer,
-        GNNNode, GNNConnection, GNNGraph)
+        GNNNode, GNNConnection)
 
     PathIntegratorGNN(const Properties &props) : Base(props) { }
 
@@ -157,19 +156,15 @@ public:
         // gnn_data_file << ray.o.x() << "," << ray.o.y() << "," << ray.o.z() << ";";
         // gnn_data_file << ray.d.x() << "," << ray.d.y() << "," << ray.d.z();
 
-        // [GNN] Create new graph
-        GNNGraph* graph;
-        
+
         // [GNN] default perceived spectrum
         Spectrum empty = 0.f;
         GNNNode* from_node;
         
         if (container->can_track()) {
-            graph = new GNNGraph();
-            graph->set_origin(ray.o);
-
+            
             from_node = new GNNNode(ray.o, Vector3f(1.f, 1.f, 1.f), empty, true);
-            graph->add_node(from_node);
+            container->add_node(from_node);
         }
 
         while (loop(active)) {
@@ -289,10 +284,11 @@ public:
             // TODO: save also throughput and/or bsdf_weight
             // [GNN] create `to` node and add connection
             if (container->can_track()) {
+
                 GNNNode* to_node = new GNNNode(si.p, si.n, c_result);
                 GNNConnection* connection = new GNNConnection(from_node, to_node, {si.t});
-                graph->add_node(to_node);
-                graph->add_connection(connection);
+                container->add_node(to_node);
+                container->add_connection(connection);
 
                 // specify next `from_node` pointer
                 from_node = to_node;
@@ -357,10 +353,7 @@ public:
 
         // [GNN] set current obtained targets
         if (container->can_track()) {
-            graph->set_targets({result.x(), result.y(), result.z()});
-
-            // add graph to container
-            container->add_graph(graph);
+            container->add_radiance(result);
         }
 
         // std::cout << " -- Graph has: " << graph->get_connections().size() << " connections" << std::endl;

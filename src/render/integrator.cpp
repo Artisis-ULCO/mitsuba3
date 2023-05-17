@@ -15,7 +15,9 @@
 #include <mitsuba/render/spiral.h>
 #include <nanothread/nanothread.h>
 
+#include <mitsuba/json.hpp>
 #include <fstream>
+#include <filesystem>
 
 NAMESPACE_BEGIN(mitsuba)
 
@@ -86,6 +88,13 @@ SamplingIntegrator<Float, Spectrum>::render(Scene *scene,
                                             bool evaluate) {
     ScopedPhase sp(ProfilerPhase::Render);
     m_stop = false;
+
+    // [GNN] create output folder here
+    // TODO: add film param
+    std::string output_folder = "gnn_data";
+    std::filesystem::create_directory(output_folder);
+    std::filesystem::permissions(output_folder, std::filesystem::perms::others_all, std::filesystem::perm_options::remove);
+
 
     // Render on a larger film if the 'high quality edges' feature is enabled
     Film *film = sensor->film();
@@ -337,6 +346,10 @@ MI_VARIANT void SamplingIntegrator<Float, Spectrum>::render_block(const Scene *s
                                                                    uint32_t block_size) const {
 
     if constexpr (!dr::is_array_v<Float>) {
+
+        // [GNN] access to film
+        const Film *film = sensor->film();
+
         uint32_t pixel_count = block_size * block_size;
 
         // Avoid overlaps in RNG seeding RNG when a seed is manually specified
@@ -347,6 +360,18 @@ MI_VARIANT void SamplingIntegrator<Float, Spectrum>::render_block(const Scene *s
 
         // Clear block (it's being reused)
         block->clear();
+
+        // [GNN] prepare output file
+        nlohmann::json json_data;
+        std::string id_str = std::to_string(block_id);
+
+        while (id_str.length() < 6)
+            id_str = "0" + id_str;
+
+        // TODO: use of film stored variable
+        std::string output_folder = "gnn_data";
+        std::string output_file = output_folder + "/" + output_folder + "_" + id_str + ".json";
+        std::ofstream output(output_file);
 
         for (uint32_t i = 0; i < pixel_count && !should_stop(); ++i) {
             sampler->seed(seed + i);
@@ -361,7 +386,45 @@ MI_VARIANT void SamplingIntegrator<Float, Spectrum>::render_block(const Scene *s
                               diff_scale_factor);
                 sampler->advance();
             }
+
+            // [GNN] save data
+            // NEED to take care of offset
+            // save GNN data by block instead
+            auto data = block->tensor().array();
+            Point2i offset_pos = Point2i(pos) + block->offset();
+            
+            GraphContainer* container = film->get_container(offset_pos);
+            
+            // TODO: check data access (need to get reference data) 
+            // use of block data
+            // auto from_index = block->channel_count() * (offset_pos.y() * block->width() + offset_pos.x());
+            nlohmann::json y_radiances = nlohmann::json::array();
+            
+            // y_radiances.push_back(data[from_index]);
+            // y_radiances.push_back(data[from_index + 1]);
+            // y_radiances.push_back(data[from_index + 2]);
+
+            Spectrum mean_radiance = container->get_radiance();
+
+            y_radiances.push_back(mean_radiance.x());
+            y_radiances.push_back(mean_radiance.y());
+            y_radiances.push_back(mean_radiance.z());
+
+            std::string index = std::to_string(offset_pos.y()) + "," + std::to_string(offset_pos.x());
+
+            // retrieve container
+            container->prepare_export();
+
+            json_data[index] = container->json();
+            json_data[index]["y"] = y_radiances;
+
+            container->clear();
         }
+
+        // write into GNN file
+        output << json_data << std::endl;
+        output.close();
+
     } else {
         DRJIT_MARK_USED(scene);
         DRJIT_MARK_USED(sensor);
@@ -429,9 +492,7 @@ SamplingIntegrator<Float, Spectrum>::render_sample(const Scene *scene,
     if (container->can_build()) {
 
         // Better to stack all graphs into one (Graph container with nodes and connections), and then do build connections in a simpler way?
-        container->build_connections(scene);
-        container->prepare_export();
-        
+        container->build_connections(scene);    
         // std::cout << "@pos: " << pos << " container has now " << container->number_of_connections() << std::endl;
     }
 
