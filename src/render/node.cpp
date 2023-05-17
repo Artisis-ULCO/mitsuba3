@@ -1,4 +1,5 @@
 #include <mitsuba/mitsuba.h>
+#include <mitsuba/json.hpp>
 #include <mitsuba/core/fwd.h>
 #include <mitsuba/core/vector.h>
 #include <mitsuba/render/node.h>
@@ -49,7 +50,25 @@ MI_VARIANT bool GNNNode<Float, Spectrum>::is_primary() const {
 
 MI_VARIANT std::vector<Float> GNNNode<Float, Spectrum>::get_properties() const {
     std::vector<Float> values;
+
+    values.insert(values.end(), position.begin(), position.end());
+    values.insert(values.end(), normal.begin(), normal.end());
+
+    // check get radiance
+    values.insert(values.end(), get_radiance().begin(), get_radiance().end());
+
     return values;
+}
+
+MI_VARIANT nlohmann::json GNNNode<Float, Spectrum>::to_json() const {
+
+    nlohmann::json json;
+
+    // simplified json extraction
+    json["attr"] = nlohmann::json::parse(get_properties());
+    json["pos"] = nlohmann::json::parse(position);
+
+    return json;
 }
 
 MI_VARIANT GNNNode<Float, Spectrum>::~GNNNode() {

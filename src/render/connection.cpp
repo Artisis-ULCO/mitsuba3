@@ -1,3 +1,4 @@
+#include <mitsuba/json.hpp>
 #include <mitsuba/render/fwd.h>
 // #include <mitsuba/render/node.h>
 #include <mitsuba/render/graph.h>
@@ -24,6 +25,16 @@ MI_VARIANT ref<typename GNNConnection<Float, Spectrum>::GNNNode> GNNConnection<F
 MI_VARIANT std::vector<Float> GNNConnection<Float, Spectrum>::get_properties() const {
     return data;
 };
+
+MI_VARIANT nlohmann::json GNNConnection<Float, Spectrum>::to_json() const {
+
+    nlohmann::json json;
+
+    // simplified json extraction
+    json["attr"] = nlohmann::json::parse(get_properties());
+
+    return json;
+}
 
 MI_VARIANT GNNConnection<Float, Spectrum>::~GNNConnection() {
 }

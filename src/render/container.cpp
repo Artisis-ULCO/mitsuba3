@@ -1,3 +1,4 @@
+#include <mitsuba/json.hpp>
 #include <mitsuba/render/graph.h>
 #include <mitsuba/render/container.h>
 
@@ -10,7 +11,7 @@ NAMESPACE_BEGIN(mitsuba)
 // =======================================================================
 
 MI_VARIANT GraphContainer<Float, Spectrum>::GraphContainer(uint32_t build_at, uint32_t n_nodes, uint32_t n_neighbors) 
-    : Object(), build_at(build_at), n_nodes(n_nodes), n_neighbors(n_neighbors), n_samples(0) {
+    : Object(), build_at(build_at), n_nodes(n_nodes), n_neighbors(n_neighbors), n_samples(0), export_done(false) {
 
 };
 
@@ -35,6 +36,9 @@ MI_VARIANT uint32_t GraphContainer<Float, Spectrum>::number_of_connections() con
 };
 
 MI_VARIANT void GraphContainer<Float, Spectrum>::add_graph(GNNGraph* graph) {
+
+    // keep track of graph 
+    graphs.push_back(graph);
 
     for (auto &node : graph->get_nodes()) 
         add_node(node);
@@ -67,6 +71,17 @@ MI_VARIANT bool GraphContainer<Float, Spectrum>::add_connection(GNNConnection* c
     return false;
 };
 
+MI_VARIANT int GraphContainer<Float, Spectrum>::get_node_index(const GNNNode* node) const {
+    
+    auto it = std::find(nodes.cbegin(), nodes.cend(), node);
+  
+    // If element was found
+    if (it != nodes.end()) 
+        return it - nodes.begin();
+    else
+        return -1;
+};
+
 MI_VARIANT GraphContainer<Float, Spectrum>::~GraphContainer() {
 }
 
@@ -85,7 +100,8 @@ MI_VARIANT SimpleGraphContainer<Float, Spectrum>::SimpleGraphContainer(uint32_t 
 
 MI_VARIANT void SimpleGraphContainer<Float, Spectrum>::build_connections(const Scene *scene) {
     
-    if (this->nodes.size() < 2)
+    // if export already done, not necessary to continue
+    if (export_done or this->nodes.size() < 2)
         return;
 
     // select a number of nodes for this graph
@@ -141,6 +157,55 @@ MI_VARIANT void SimpleGraphContainer<Float, Spectrum>::build_connections(const S
             }
         }
     }
+};
+
+MI_VARIANT void SimpleGraphContainer<Float, Spectrum>::prepare_export() {
+
+    // create export data to json
+    nlohmann::json data;
+
+    // export nodes data
+    nlohmann::json nodes_x;
+    nlohmann::json nodes_pos;
+    for (auto node : nodes) {
+        auto node_data = node->to_json();
+        nodes_x.push_back(node_data["x"]);
+        nodes_pos.push_back(node_data["pos"]);
+    }
+
+    data["x"] = nodes_x;
+    data["pos"] = nodes_pos;
+
+    // export edges data
+    nlohmann::json edges_indices;
+    nlohmann::json edges_attr;
+    for (auto connection : connections) {
+
+        // get nodes indices
+        int node_index_from = this->get_node_index(connection->from());
+        int node_index_to = this->get_node_index(connection->to());
+
+        std::vector<int> indices = {node_index_from, node_index_to};
+        edges_indices.push_back(nlohmann::json::parse(indices));
+
+        // retrieve connection data 
+        auto connection_data = connection->to_json();
+        edges_attr.push_back(connection_data["attr"]);
+    }
+
+    data["edge_index"] = edges_indices;
+    data["edge_attr"] = edges_attr;
+
+    // store current json representation before clearing
+    this->json_data = data;
+
+    // clear data
+    connections.clear();
+    nodes.clear();
+    graphs.clear();
+
+    // mark export as done
+    export_done = true;
 };
 
 

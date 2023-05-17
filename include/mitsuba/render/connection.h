@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mitsuba/mitsuba.h>
+#include <mitsuba/json.hpp>
 #include <mitsuba/render/fwd.h>
 #include <mitsuba/core/object.h>
 // #include <mitsuba/core/spectrum.h>
@@ -18,6 +19,8 @@ public:
     ref<GNNNode> from() const; 
     ref<GNNNode> to() const; 
     virtual std::vector<Float> get_properties() const; 
+
+    virtual nlohmann::json to_json() const;
 
     // Virtual destructor
     virtual ~GNNConnection();

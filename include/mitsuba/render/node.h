@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mitsuba/mitsuba.h>
+#include <mitsuba/json.hpp>
 #include <mitsuba/core/fwd.h>
 #include <mitsuba/core/vector.h>
 #include <mitsuba/core/spectrum.h>
@@ -19,6 +20,7 @@ public:
     Vector3f get_normal() const;
     Spectrum get_radiance() const;
     bool is_primary() const;
+    virtual nlohmann::json to_json() const;
 
     virtual std::vector<Float> get_properties() const;
 

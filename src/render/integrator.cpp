@@ -428,11 +428,9 @@ SamplingIntegrator<Float, Spectrum>::render_sample(const Scene *scene,
     // [GNN] build connections
     if (container->can_build()) {
 
-        // TODO: also need to stack graphs!
-
         // Better to stack all graphs into one (Graph container with nodes and connections), and then do build connections in a simpler way?
         container->build_connections(scene);
-
+        container->prepare_export();
         
         // std::cout << "@pos: " << pos << " container has now " << container->number_of_connections() << std::endl;
     }
