@@ -356,6 +356,9 @@ public:
             container->add_radiance(result);
         }
 
+        // always accumulate radiance
+        container->accum_target(result);
+
         // std::cout << " -- Graph has: " << graph->get_connections().size() << " connections" << std::endl;
         // std::cout << " -- Graph has: " << graph->get_nodes().size() << " nodes" << std::endl;
 

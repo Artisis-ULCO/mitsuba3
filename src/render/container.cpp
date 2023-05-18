@@ -10,7 +10,7 @@ NAMESPACE_BEGIN(mitsuba)
 // =======================================================================
 
 MI_VARIANT GraphContainer<Float, Spectrum>::GraphContainer(uint32_t build_at, uint32_t n_nodes, uint32_t n_neighbors) 
-    : Object(), build_at(build_at), n_nodes(n_nodes), n_neighbors(n_neighbors), n_samples(0), export_done(false) {
+    : Object(), build_at(build_at), n_nodes(n_nodes), n_neighbors(n_neighbors), n_samples(0), export_done(false), target(0.f) {
 
 };
 
@@ -41,7 +41,15 @@ MI_VARIANT uint32_t GraphContainer<Float, Spectrum>::number_of_connections() con
 MI_VARIANT void GraphContainer<Float, Spectrum>::add_radiance(Spectrum radiance) {
 
     // keep track of obtained radiances
-    radiances.push_back(radiance);
+    Float w = 1.f / (Float)(n_samples + 1);
+    c_radiance = (1.f - w) * c_radiance + w * radiance;
+};
+
+MI_VARIANT void GraphContainer<Float, Spectrum>::accum_target(Spectrum radiance) {
+
+    // keep track of obtained radiance
+    Float w = 1.f / (Float)(n_samples + 1);
+    target = (1.f - w) * target + w * radiance;
 };
 
 MI_VARIANT bool GraphContainer<Float, Spectrum>::add_node(GNNNode* node) {
@@ -79,18 +87,14 @@ MI_VARIANT int GraphContainer<Float, Spectrum>::get_node_index(const GNNNode* no
         return -1;
 };
 
+MI_VARIANT Spectrum GraphContainer<Float, Spectrum>::get_target() const {
+    
+    return target;
+};
+
 MI_VARIANT Spectrum GraphContainer<Float, Spectrum>::get_radiance() const {
     
-    Spectrum radiance = 0.f;
-
-    for (auto r : radiances)
-        radiance += r;
-
-    if (radiances.size() > 0)
-        return radiance / radiances.size();
-    else 
-        return radiance;
-        
+    return c_radiance;    
 };
 
 MI_VARIANT void GraphContainer<Float, Spectrum>::clear() {
@@ -98,7 +102,6 @@ MI_VARIANT void GraphContainer<Float, Spectrum>::clear() {
     // clear data
     connections.clear();
     nodes.clear();
-    radiances.clear();
 
     // reinit string
     this->json_data_str = "";

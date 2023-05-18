@@ -362,6 +362,8 @@ MI_VARIANT void SamplingIntegrator<Float, Spectrum>::render_block(const Scene *s
         block->clear();
 
         // [GNN] prepare output file
+        ScalarVector2u size = block->size() + 2 * block->border_size();
+
         nlohmann::json json_data;
         std::string id_str = std::to_string(block_id);
 
@@ -397,14 +399,28 @@ MI_VARIANT void SamplingIntegrator<Float, Spectrum>::render_block(const Scene *s
             
             // TODO: check data access (need to get reference data) 
             // use of block data
-            // auto from_index = block->channel_count() * (offset_pos.y() * block->width() + offset_pos.x());
+            // auto from_index = block->channel_count() * ((pos.y() + border)  * block->width() + pos.x() + border);
+            // Point2u p = Point2u(dr::floor2int<Point2i>(pos) - block->offset());
+            // auto from_index = (pos.y() * size.x() + pos.x()) * block->channel_count();
             nlohmann::json y_radiances = nlohmann::json::array();
+
+            // std::cout << "------------------" << std::endl;
+            // std::cout << "Block: " << block->size() << std::endl;
+            // std::cout << "Border: " << block->border_size() << std::endl;
+            // std::cout << "N channels: " << block->channel_count() << std::endl; 
+            // std::cout << pos << " --- " << offset_pos << std::endl;
+            // std::cout << from_index << std::endl;
+            // std::cout << "Size: " << data.size() << std::endl;
+            // std::cout << data[from_index] << ", ";
+            // std::cout << data[from_index + 1] << ", ";
+            // std::cout << data[from_index + 2] << ", ";
+            // std::cout << std::endl;
             
             // y_radiances.push_back(data[from_index]);
             // y_radiances.push_back(data[from_index + 1]);
             // y_radiances.push_back(data[from_index + 2]);
 
-            Spectrum mean_radiance = container->get_radiance();
+            Spectrum mean_radiance = container->get_target();
 
             y_radiances.push_back(mean_radiance.x());
             y_radiances.push_back(mean_radiance.y());
@@ -419,6 +435,7 @@ MI_VARIANT void SamplingIntegrator<Float, Spectrum>::render_block(const Scene *s
             json_data[index]["y"] = y_radiances;
 
             container->clear();
+            delete container;
         }
 
         // write into GNN file
@@ -487,14 +504,10 @@ SamplingIntegrator<Float, Spectrum>::render_sample(const Scene *scene,
     // [GNN] update number of samples
     container->update_n_samples();
 
-    // std::cout << pos << " @sample " << container->number_of_samples() << " => container has " << container->number_of_connections() << std::endl;
     // [GNN] build connections
-    if (container->can_build()) {
-
-        // Better to stack all graphs into one (Graph container with nodes and connections), and then do build connections in a simpler way?
+    // Better to stack all subgraphs into one (Graph container with nodes and connections), and then do build connections
+    if (container->can_build())
         container->build_connections(scene);    
-        // std::cout << "@pos: " << pos << " container has now " << container->number_of_connections() << std::endl;
-    }
 
     UnpolarizedSpectrum spec_u = unpolarized_spectrum(ray_weight * spec);
 

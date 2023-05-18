@@ -19,6 +19,7 @@ public:
 
     uint32_t number_of_samples() const;
     Spectrum get_radiance() const;
+    Spectrum get_target() const;
 
     void update_n_samples();
     bool can_track() const;
@@ -31,6 +32,7 @@ public:
     bool add_node(GNNNode* node);
     bool add_connection(GNNConnection* connection);
     void add_radiance(Spectrum radiance);
+    void accum_target(Spectrum radiance);
 
     void clear();
 
@@ -54,7 +56,8 @@ protected:
     std::string json_data_str;
 
     // accumulated radiances at this point
-    std::vector<Spectrum> radiances;
+    Spectrum c_radiance; // GNN radiance
+    Spectrum target; // total accumulated radiance
 
     // Store also graphs, nodes and connections
     std::vector<ref<GNNNode>> nodes;
