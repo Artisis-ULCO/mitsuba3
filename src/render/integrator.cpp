@@ -372,8 +372,8 @@ MI_VARIANT void SamplingIntegrator<Float, Spectrum>::render_block(const Scene *s
 
         // TODO: use of film stored variable
         std::string output_folder = "gnn_data";
-        std::string output_file = output_folder + "/" + output_folder + "_" + id_str + ".json";
-        std::ofstream output(output_file);
+        std::string output_file = output_folder + "/" + output_folder + "_" + id_str + ".pack";
+        std::ofstream output(output_file, std::ios::out | std::ios::binary);
 
         for (uint32_t i = 0; i < pixel_count && !should_stop(); ++i) {
             sampler->seed(seed + i);
@@ -439,7 +439,13 @@ MI_VARIANT void SamplingIntegrator<Float, Spectrum>::render_block(const Scene *s
         }
 
         // write into GNN file
-        output << json_data << std::endl;
+        // output << json_data.dump() << std::endl;
+        // std::string str_json = json_data.dump();
+        std::vector<uint8_t> output_vector;
+        nlohmann::json::to_msgpack(json_data, output_vector);
+        output.write(reinterpret_cast<const char*>(output_vector.data()), output_vector.size());
+        // output.write(str_json.c_str(), str_json.size() + 1);
+        // output << str_json;
         output.close();
 
     } else {
