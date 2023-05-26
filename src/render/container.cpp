@@ -140,6 +140,9 @@ MI_VARIANT void SimpleGraphContainer<Float, Spectrum>::build_connections(const S
         selected_nodes.push_back(node);
     }
 
+    // TODO: filter primary node (only one use)
+    // associate all connections of others primary node to this specific node
+
     if (selected_nodes.size() > 0) {
 
         // try to create connection

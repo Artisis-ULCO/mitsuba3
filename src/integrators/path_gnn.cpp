@@ -101,7 +101,7 @@ public:
 
     std::pair<Spectrum, Bool> sample(const Scene *scene,
                                      Sampler *sampler,
-                                     const Vector2f &pos,
+                                     const Vector2f &/* pos */,
                                      const RayDifferential3f &ray_,
                                      GraphContainer * container,
                                      const Medium * /* medium */,
@@ -159,7 +159,7 @@ public:
 
         // [GNN] default perceived spectrum
         Spectrum empty = 0.f;
-        GNNNode* from_node;
+        GNNNode* from_node = nullptr;
         
         if (container->can_track()) {
             

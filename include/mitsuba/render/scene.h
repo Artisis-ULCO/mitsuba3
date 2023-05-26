@@ -504,7 +504,7 @@ public:
     bool shapes_grad_enabled() const { return m_shapes_grad_enabled; };
 
     // [GNN]
-    std::string get_logfile() const { return m_logfile; };
+    std::string get_output_gnn() const { return m_output_gnn; };
 
     /// Return a human-readable string representation of the scene contents.
     virtual std::string to_string() const override;
@@ -577,7 +577,7 @@ protected:
     ScalarFloat m_emitter_pmf;
 
     // [GNN]
-    std::string m_logfile;
+    std::string m_output_gnn;
 
     bool m_shapes_grad_enabled;
 };

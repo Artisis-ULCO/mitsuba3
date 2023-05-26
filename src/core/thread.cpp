@@ -435,6 +435,7 @@ void Thread::exit() {
     d->running = false;
     Assert(self == this);
     self = nullptr;
+    std::cout << "Thread has finished..." << std::endl;
     dec_ref();
 }
 

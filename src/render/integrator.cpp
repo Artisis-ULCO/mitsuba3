@@ -89,15 +89,16 @@ SamplingIntegrator<Float, Spectrum>::render(Scene *scene,
     ScopedPhase sp(ProfilerPhase::Render);
     m_stop = false;
 
+    Film *film = sensor->film();
+
     // [GNN] create output folder here
     // TODO: add film param
-    std::string output_folder = "gnn_data";
+    std::string output_folder = scene->get_output_gnn();
     std::filesystem::create_directory(output_folder);
     std::filesystem::permissions(output_folder, std::filesystem::perms::others_all, std::filesystem::perm_options::remove);
 
 
     // Render on a larger film if the 'high quality edges' feature is enabled
-    Film *film = sensor->film();
     ScalarVector2u film_size = film->crop_size();
     if (film->sample_border())
         film_size += 2 * film->rfilter()->border_size();
@@ -198,6 +199,20 @@ SamplingIntegrator<Float, Spectrum>::render(Scene *scene,
                     render_block(scene, sensor, sampler, block, aovs.get(),
                                  spp_per_pass, seed, block_id, block_size);
 
+                    // [GNN] clear containers from block
+                    // cannot be done inside render_block function (or render_sample)
+                    uint32_t pixel_count = block_size * block_size;
+                    for (uint32_t i = 0; i < pixel_count; ++i) {
+
+                        Point2u pos = dr::morton_decode<Point2u>(i);
+
+                        if (dr::any(pos >= block->size()))
+                            continue;
+
+                        Point2i offset_pos = Point2i(pos) + block->offset();
+                        film->reset_container(offset_pos);
+                    }
+                    
                     film->put_block(block);
 
                     /* Critical section: update progress bar */
@@ -371,7 +386,7 @@ MI_VARIANT void SamplingIntegrator<Float, Spectrum>::render_block(const Scene *s
             id_str = "0" + id_str;
 
         // TODO: use of film stored variable
-        std::string output_folder = "gnn_data";
+        std::string output_folder = scene->get_output_gnn();
         std::string output_file = output_folder + "/" + output_folder + "_" + id_str + ".pack";
         std::ofstream output(output_file, std::ios::out | std::ios::binary);
 
@@ -392,7 +407,7 @@ MI_VARIANT void SamplingIntegrator<Float, Spectrum>::render_block(const Scene *s
             // [GNN] save data
             // NEED to take care of offset
             // save GNN data by block instead
-            auto data = block->tensor().array();
+            // auto data = block->tensor().array();
             Point2i offset_pos = Point2i(pos) + block->offset();
             
             GraphContainer* container = film->get_container(offset_pos);
@@ -403,22 +418,6 @@ MI_VARIANT void SamplingIntegrator<Float, Spectrum>::render_block(const Scene *s
             // Point2u p = Point2u(dr::floor2int<Point2i>(pos) - block->offset());
             // auto from_index = (pos.y() * size.x() + pos.x()) * block->channel_count();
             nlohmann::json y_radiances = nlohmann::json::array();
-
-            // std::cout << "------------------" << std::endl;
-            // std::cout << "Block: " << block->size() << std::endl;
-            // std::cout << "Border: " << block->border_size() << std::endl;
-            // std::cout << "N channels: " << block->channel_count() << std::endl; 
-            // std::cout << pos << " --- " << offset_pos << std::endl;
-            // std::cout << from_index << std::endl;
-            // std::cout << "Size: " << data.size() << std::endl;
-            // std::cout << data[from_index] << ", ";
-            // std::cout << data[from_index + 1] << ", ";
-            // std::cout << data[from_index + 2] << ", ";
-            // std::cout << std::endl;
-            
-            // y_radiances.push_back(data[from_index]);
-            // y_radiances.push_back(data[from_index + 1]);
-            // y_radiances.push_back(data[from_index + 2]);
 
             Spectrum mean_radiance = container->get_target();
 
@@ -435,17 +434,16 @@ MI_VARIANT void SamplingIntegrator<Float, Spectrum>::render_block(const Scene *s
             json_data[index]["y"] = y_radiances;
 
             container->clear();
-            delete container;
+
+            // TODO: check error when deleting
+            // delete container;
+            // container = nullptr;
         }
 
         // write into GNN file
-        // output << json_data.dump() << std::endl;
-        // std::string str_json = json_data.dump();
         std::vector<uint8_t> output_vector;
         nlohmann::json::to_msgpack(json_data, output_vector);
         output.write(reinterpret_cast<const char*>(output_vector.data()), output_vector.size());
-        // output.write(str_json.c_str(), str_json.size() + 1);
-        // output << str_json;
         output.close();
 
     } else {
@@ -512,8 +510,9 @@ SamplingIntegrator<Float, Spectrum>::render_sample(const Scene *scene,
 
     // [GNN] build connections
     // Better to stack all subgraphs into one (Graph container with nodes and connections), and then do build connections
-    if (container->can_build())
+    if (container->can_build()) {
         container->build_connections(scene);    
+    }
 
     UnpolarizedSpectrum spec_u = unpolarized_spectrum(ray_weight * spec);
 

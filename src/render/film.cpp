@@ -51,7 +51,7 @@ MI_VARIANT Film<Float, Spectrum>::Film(const Properties &props) : Object() {
                 Properties("gaussian"));
 
     // [GNN] get expected type
-    container_type = props.get<std::string>("gnn", "simple");
+    container_type = props.get<std::string>("container", "simple");
 
     init_container();
 }

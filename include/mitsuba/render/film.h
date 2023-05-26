@@ -6,8 +6,8 @@
 #include <mitsuba/core/rfilter.h>
 #include <mitsuba/core/vector.h>
 #include <mitsuba/render/sampler.h>
-#include <mitsuba/render/container.h>
 #include <mitsuba/render/fwd.h>
+#include <mitsuba/render/container.h>
 #include <mitsuba/render/texture.h>
 
 NAMESPACE_BEGIN(mitsuba)
@@ -210,6 +210,12 @@ public:
         return containers[pos_index].get();
     }
 
+    void reset_container(const Point2f &pos) {
+        
+        uint32_t pos_index = pos.y() * m_crop_size.x() + pos.x();
+        Assert(pos_index < containers.size()); 
+        containers[pos_index].reset();
+    }
     //! @}
     // =============================================================
 
