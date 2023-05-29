@@ -117,6 +117,76 @@ mi.Bitmap(img).write('cbox.exr')
 Tutorials and example notebooks covering a variety of applications can be found
 in the [documentation][2].
 
+## GNN variants
+
+These updates enable to track and store ray graphs when rendering. All graphs are stored in JSON file, using specific binary format proposed by [MessagePack](https://msgpack.org/index.html).
+
+An example of scene params using a specific GNN integrator:
+```xml
+<scene version="3.0.0">
+  <!-- [GNN] Need to specify the specific GNN integrator -->
+	<default name="integrator" value="pathgnn" />
+	<default name="spp" value="100" />
+        <default name="resy" value="100" />
+	<default name="resx" value="100" />
+	<default name="max_depth" value="16" />
+  <!-- [GNN] Need to specify the specific GNN output graphs folder -->
+	<string name="output_gnn" value="output_gnn"/>
+	<integrator type="$integrator">
+		<integer name="max_depth" value="$max_depth" />
+	</integrator>
+	<sensor type="perspective">
+		<float name="fov" value="19.5" />
+		<transform name="to_world">
+			<matrix value="-1 0 0 0 0 1 0 1 0 0 -1 6.8 0 0 0 1" />
+		</transform>
+		<sampler type="independent">
+			<integer name="sample_count" value="$spp" />
+		</sampler>
+    <film type="hdrfilm">
+			<integer name="width" value="$resx" />
+			<integer name="height" value="$resy" />
+			<string name="file_format" value="openexr" />
+			<string name="pixel_format" value="rgb" />
+
+      <!-- [GNN] Container type and params -->
+			<string name="gnn_integrator_type" value="$integrator" />
+			<integer name="gnn_until" value="20" />
+			<integer name="gnn_nodes" value="20" />
+			<integer name="gnn_neighbors" value="10" />
+
+			<rfilter type="tent" />
+		</film>
+    </sensor>
+    ...
+</scene>
+```
+
+**Available integrators**:
+- `"pathgnn"`: simple graph representation (`gnn_integrator_type` need to be set to the same value)
+
+TODO: description of graph content
+
+**Available params**:
+- `"gnn_until"`: the number of samples until graphs are stored (later graphs are no longer tracked) 
+- `"gnn_nodes"`: the number of nodes from a graph taken into account in order to build a new connection to another node
+- `"gnn_neighbors"`: for each node from `gnn_nodes`, select randomly `gnn_neighbors` graphs and pick for each of these graphs, select a node and try to build a new connection 
+
+
+An example of how to load a GNN `MessagePack` file using Python:
+
+```python
+import msgpack
+
+with open(filename, 'rb') as f:
+
+  data = msgpack.unpackb(f.read(), raw=False)
+  for k_pixel in data.keys():
+      # pixel coordinates
+      h, w = list(map(int, k_pixel.split(',')))
+      print(f'Pixel targets are: {data[k_pixel]['y']}')
+```
+
 ## About
 
 This project was created by [Wenzel Jakob](https://rgl.epfl.ch/people/wjakob).

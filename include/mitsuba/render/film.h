@@ -236,7 +236,10 @@ protected:
 
 protected:
     // [MIS]
-    std::string container_type;
+    std::string m_gnn_integrator_type;
+    uint32_t m_gnn_until;
+    uint32_t m_gnn_nodes;
+    uint32_t m_gnn_neighbors;
     std::vector<std::unique_ptr<GraphContainer>> containers;
 
     ScalarVector2u m_size;

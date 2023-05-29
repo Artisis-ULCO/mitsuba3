@@ -51,7 +51,10 @@ MI_VARIANT Film<Float, Spectrum>::Film(const Properties &props) : Object() {
                 Properties("gaussian"));
 
     // [GNN] get expected type
-    container_type = props.get<std::string>("container", "simple");
+    m_gnn_integrator_type = props.get<std::string>("gnn_integrator_type", "simple");
+    m_gnn_until = props.get<uint32_t>("gnn_until", 20);
+    m_gnn_nodes = props.get<uint32_t>("gnn_nodes", 20);
+    m_gnn_neighbors = props.get<uint32_t>("gnn_neighbors", 10);
 
     init_container();
 }
@@ -70,10 +73,10 @@ MI_VARIANT void Film<Float, Spectrum>::init_container() {
         std::unique_ptr<GraphContainer> container;
 
         // params: build_at, n_nodes, n_neighbors
-        if (container_type == "simple")
-            container = std::make_unique<SimpleGraphContainer<Float, Spectrum>>(20, 20, 10);
+        if (m_gnn_integrator_type == "pathgnn")
+            container = std::make_unique<SimpleGraphContainer<Float, Spectrum>>(m_gnn_until, m_gnn_nodes, m_gnn_neighbors);
         else
-            container = std::make_unique<SimpleGraphContainer<Float, Spectrum>>(20, 20, 10);
+            container = std::make_unique<SimpleGraphContainer<Float, Spectrum>>(m_gnn_until, m_gnn_nodes, m_gnn_neighbors);
 
         containers.push_back(std::move(container));
     }
@@ -85,7 +88,10 @@ MI_VARIANT void Film<Float, Spectrum>::traverse(TraversalCallback *callback) {
     callback->put_parameter("crop_offset", m_crop_offset, +ParamFlags::NonDifferentiable);
 
     // [MIS]
-    callback->put_parameter("container_type", container_type, +ParamFlags::NonDifferentiable);
+    callback->put_parameter("gnn_integrator_type", m_gnn_integrator_type, +ParamFlags::NonDifferentiable);
+    callback->put_parameter("gnn_until", m_gnn_until, +ParamFlags::NonDifferentiable);
+    callback->put_parameter("gnn_nodes", m_gnn_nodes, +ParamFlags::NonDifferentiable);
+    callback->put_parameter("gnn_neighbors", m_gnn_neighbors, +ParamFlags::NonDifferentiable);
 }
 
 MI_VARIANT void Film<Float, Spectrum>::parameters_changed(const std::vector<std::string> &keys) {
@@ -100,7 +106,7 @@ MI_VARIANT void Film<Float, Spectrum>::parameters_changed(const std::vector<std:
             crop_offset = 0;
     }
 
-    if (string::contains(keys, "container_type")) {
+    if (string::contains(keys, "gnn_integrator_type")) {
         init_container();
     }
 
