@@ -163,7 +163,7 @@ public:
         
         if (container->can_track()) {
             
-            from_node = new GNNNode(ray.o, Vector3f(1.f, 1.f, 1.f), empty, true);
+            from_node = new GNNNode(ray.o, Vector3f(1.f, 1.f, 1.f), empty, depth, true);
             container->add_node(from_node);
         }
 
@@ -285,7 +285,7 @@ public:
             // [GNN] create `to` node and add connection
             if (container->can_track()) {
 
-                GNNNode* to_node = new GNNNode(si.p, si.n, c_result);
+                GNNNode* to_node = new GNNNode(si.p, si.n, c_result, depth);
                 GNNConnection* connection = new GNNConnection(from_node, to_node, {si.t});
                 container->add_node(to_node);
                 container->add_connection(connection);

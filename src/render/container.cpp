@@ -129,8 +129,22 @@ MI_VARIANT SimpleGraphContainer<Float, Spectrum>::SimpleGraphContainer(uint32_t 
 MI_VARIANT void SimpleGraphContainer<Float, Spectrum>::build_connections(const Scene *scene) {
     
     // if export already done, not necessary to continue
-    if (export_done or this->nodes.size() < 2)
+    if (export_done or nodes.size() < 2)
         return;
+
+    // // filter primary node (only one use)
+    // std::vector<ref<GNNNode>> primary_nodes;
+
+    // // expected at least `n_samples` primary nodes
+    // for (auto c_node : nodes)
+    //     if (c_node->is_primary())
+    //         primary_nodes.push_back(c_node);
+
+    // // select primary node
+    // auto c_primary_node = primary_nodes[rand() % nodes.size()];
+
+    // // TODO: switch connection using this primary nodes
+    // // TODO: remove all others primary nodes
 
     // select a number of nodes for this graph
     std::vector<ref<GNNNode>> selected_nodes;
@@ -139,9 +153,6 @@ MI_VARIANT void SimpleGraphContainer<Float, Spectrum>::build_connections(const S
         auto node = nodes[rand() % nodes.size()];
         selected_nodes.push_back(node);
     }
-
-    // TODO: filter primary node (only one use)
-    // associate all connections of others primary node to this specific node
 
     if (selected_nodes.size() > 0) {
 
@@ -159,7 +170,10 @@ MI_VARIANT void SimpleGraphContainer<Float, Spectrum>::build_connections(const S
             }
 
             for (auto c_neighbor_node : neighbor_nodes) {
-                // do necessary to create connection from near origin point
+
+                // only use the current kept primary node
+
+                // not necessary to create connection from near origin point
                 if (node->is_primary() and c_neighbor_node->is_primary())
                     continue;
 
@@ -176,10 +190,12 @@ MI_VARIANT void SimpleGraphContainer<Float, Spectrum>::build_connections(const S
 
                 if (si.is_valid() and si.t >= distance) {
                     // add connection into current graph (from -> to)
-                    auto from_to_connection = new GNNConnection(node, c_neighbor_node, {si.t});
+                    // set to built
+                    auto from_to_connection = new GNNConnection(node, c_neighbor_node, {si.t}, true);
                     
                     // add connection into neighbor graph (to -> from)
-                    auto to_from_connection = new GNNConnection(c_neighbor_node, node, {si.t});
+                    // set to built
+                    auto to_from_connection = new GNNConnection(c_neighbor_node, node, {si.t}, true);
 
                     // also inside current container
                     connections.push_back(from_to_connection);
@@ -198,18 +214,22 @@ MI_VARIANT void SimpleGraphContainer<Float, Spectrum>::prepare_export() {
     // export nodes data
     nlohmann::json nodes_x;
     nlohmann::json nodes_pos;
+    nlohmann::json nodes_primary;
     for (auto node : nodes) {
         auto node_data = node->to_json();
         nodes_x.push_back(node_data["attr"]);
         nodes_pos.push_back(node_data["pos"]);
+        nodes_primary.push_back(node_data["primary"]);
     }
 
     data["x"] = nodes_x;
+    data["x_primary"] = nodes_primary;
     data["pos"] = nodes_pos;
 
     // export edges data
     nlohmann::json edges_indices;
     nlohmann::json edges_attr;
+    nlohmann::json edges_built;
     for (auto connection : connections) {
 
         // get nodes indices
@@ -221,10 +241,12 @@ MI_VARIANT void SimpleGraphContainer<Float, Spectrum>::prepare_export() {
         // retrieve connection data 
         auto connection_data = connection->to_json();
         edges_attr.push_back(connection_data["attr"]);
+        edges_built.push_back(connection_data["built"]);
     }
 
     data["edge_index"] = edges_indices;
     data["edge_attr"] = edges_attr;
+    data["edge_built"] = edges_built;
 
     // store current json representation before clearing
     this->json_data_str = data.dump();

@@ -10,7 +10,12 @@ NAMESPACE_BEGIN(mitsuba)
 // =======================================================================
 
 MI_VARIANT GNNConnection<Float, Spectrum>::GNNConnection(GNNNode* from_node, GNNNode* to_node, std::vector<Float> data) 
-    : Object(), from_node(from_node), to_node(to_node), data(data) {
+    : Object(), from_node(from_node), to_node(to_node), data(data), built(false) {
+
+};
+
+MI_VARIANT GNNConnection<Float, Spectrum>::GNNConnection(GNNNode* from_node, GNNNode* to_node, std::vector<Float> data, bool built) 
+    : Object(), from_node(from_node), to_node(to_node), data(data), built(built) {
 
 };
 
@@ -34,9 +39,11 @@ MI_VARIANT nlohmann::json GNNConnection<Float, Spectrum>::to_json() const {
 
     // properties extraction
     nlohmann::json v_properties = nlohmann::json::array();
+    
     for (auto prop : properties)
         v_properties.push_back(prop);
     json["attr"] = v_properties;
+    json["built"] = built;
 
     return json;
 }

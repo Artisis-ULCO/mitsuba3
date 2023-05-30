@@ -10,14 +10,14 @@ NAMESPACE_BEGIN(mitsuba)
 //! @{ \name GNNNode implementations
 // =======================================================================
 
-MI_VARIANT GNNNode<Float, Spectrum>::GNNNode(Point3f position, Vector3f normal, Spectrum radiance) 
-    : Object(), position(position), normal(normal), primary(false) {
+MI_VARIANT GNNNode<Float, Spectrum>::GNNNode(Point3f position, Vector3f normal, Spectrum radiance, uint32_t depth) 
+    : Object(), position(position), normal(normal), depth(depth), primary(false) {
 
     radiances.push_back(radiance);
 }
 
-MI_VARIANT GNNNode<Float, Spectrum>::GNNNode(Point3f position, Vector3f normal, Spectrum radiance, bool primary) 
-    : Object(), position(position), normal(normal), primary(primary) {
+MI_VARIANT GNNNode<Float, Spectrum>::GNNNode(Point3f position, Vector3f normal, Spectrum radiance, uint32_t depth, bool primary) 
+    : Object(), position(position), normal(normal), depth(depth), primary(primary) {
 
     radiances.push_back(radiance);
 }
@@ -68,6 +68,9 @@ MI_VARIANT std::vector<Float> GNNNode<Float, Spectrum>::get_properties() const {
     values.push_back(radiance.y());
     values.push_back(radiance.z());
 
+    // also add depth
+    values.push_back((Float)depth);
+
     return values;
 }
 
@@ -81,6 +84,7 @@ MI_VARIANT nlohmann::json GNNNode<Float, Spectrum>::to_json() const {
     nlohmann::json v_properties = nlohmann::json::array();
     for (auto prop : properties)
         v_properties.push_back(prop);
+
     json["attr"] = v_properties;
 
     // position extraction
@@ -90,6 +94,7 @@ MI_VARIANT nlohmann::json GNNNode<Float, Spectrum>::to_json() const {
     v_position.push_back(position.z());
 
     json["pos"] = v_position;
+    json["primary"] = primary;
 
     return json;
 }

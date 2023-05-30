@@ -30,6 +30,7 @@ public:
     }
    
     GNNConnection(GNNNode* from_node, GNNNode* to_node, std::vector<Float> data);
+    GNNConnection(GNNNode* from_node, GNNNode* to_node, std::vector<Float> data, bool built);
 
     MI_DECLARE_CLASS()
 
@@ -37,6 +38,7 @@ protected:
     ref<GNNNode> from_node;
     ref<GNNNode> to_node;
     std::vector<Float> data;
+    bool built;
 };
 
 

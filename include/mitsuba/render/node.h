@@ -31,8 +31,8 @@ public:
         return position == other.position and normal == other.normal;
     }
 
-    GNNNode(Point3f position, Vector3f normal, Spectrum radiance);
-    GNNNode(Point3f position, Vector3f normal, Spectrum radiance, bool primary);
+    GNNNode(Point3f position, Vector3f normal, Spectrum radiance, uint32_t depth);
+    GNNNode(Point3f position, Vector3f normal, Spectrum radiance, uint32_t depth, bool primary);
 
     MI_DECLARE_CLASS()
 
@@ -40,6 +40,7 @@ protected:
     Point3f position;
     Vector3f normal;
     std::vector<Spectrum> radiances; // accumulate radiance
+    uint32_t depth;
     bool primary;
 };
 
