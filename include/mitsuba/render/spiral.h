@@ -7,7 +7,7 @@
 #include <mutex>
 
 #if !defined(MI_BLOCK_SIZE)
-#  define MI_BLOCK_SIZE 32
+#  define MI_BLOCK_SIZE 64
 #endif
 
 NAMESPACE_BEGIN(mitsuba)

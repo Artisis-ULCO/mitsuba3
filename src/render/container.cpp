@@ -215,6 +215,7 @@ MI_VARIANT void SimpleGraphContainer<Float, Spectrum>::prepare_export() {
     nlohmann::json nodes_x;
     nlohmann::json nodes_pos;
     nlohmann::json nodes_primary;
+
     for (auto node : nodes) {
         auto node_data = node->to_json();
         nodes_x.push_back(node_data["attr"]);
@@ -230,6 +231,7 @@ MI_VARIANT void SimpleGraphContainer<Float, Spectrum>::prepare_export() {
     nlohmann::json edges_indices;
     nlohmann::json edges_attr;
     nlohmann::json edges_built;
+
     for (auto connection : connections) {
 
         // get nodes indices
@@ -247,6 +249,9 @@ MI_VARIANT void SimpleGraphContainer<Float, Spectrum>::prepare_export() {
     data["edge_index"] = edges_indices;
     data["edge_attr"] = edges_attr;
     data["edge_built"] = edges_built;
+
+    // also store current graph radiance (accumulated radiance obtained when extracting data)
+    data["radiance"] = this->get_radiance();
 
     // store current json representation before clearing
     this->json_data_str = data.dump();

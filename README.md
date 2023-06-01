@@ -66,6 +66,8 @@ or differential spectral transport on the GPU. This all builds on
 
 These updates enable to track and store ray graphs when rendering. All graphs are stored in JSON file, using specific binary format proposed by [MessagePack](https://msgpack.org/index.html).
 
+**Note:** `BLOCK_SIZE` is set to 64x64 during rendering.
+
 An example of scene params using a specific GNN integrator:
 ```xml
 <scene version="3.0.0">

@@ -385,7 +385,7 @@ MI_VARIANT void SamplingIntegrator<Float, Spectrum>::render_block(const Scene *s
         while (id_str.length() < 6)
             id_str = "0" + id_str;
 
-        // TODO: use of film stored variable
+        // use of film stored variable
         std::string output_folder = scene->get_output_gnn();
         std::string output_file = output_folder + "/gnn_" + id_str + ".pack";
         std::ofstream output(output_file, std::ios::out | std::ios::binary);
