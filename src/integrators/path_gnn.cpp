@@ -162,10 +162,25 @@ public:
         Spectrum c_direct = 0.f;
         GNNNode* from_node = nullptr;
 
+        // In this version, do not add current 
         if (container->can_track()) {
             
-            from_node = new GNNNode(ray.o, Vector3f(1.f, 1.f, 1.f), empty, depth, true);
-            container->add_node(from_node);
+            Float cos_phi   = dr::abs(Frame3f::cos_phi(ray.d));
+
+            // could be: dr::asin(Frame3f::sin_theta(ray.d))
+            Float cos_theta   = dr::abs(Frame3f::cos_theta(ray.d));
+            Float sin_theta   = dr::abs(Frame3f::sin_theta(ray.d));
+
+            Float theta = dr::atan(sin_theta / cos_theta);
+            Float phi = dr::acos(cos_phi);
+
+            // add current camera space information
+            container->add_elevation(theta);
+            container->add_azimuth(phi);
+            container->add_origin(ray.o);
+
+        //     from_node = new GNNNode(ray.o, Vector3f(1.f, 1.f, 1.f), empty, depth, true);
+        //     container->add_node(from_node);
         }
 
         while (loop(active)) {
@@ -286,9 +301,13 @@ public:
             if (container->can_track()) {
 
                 GNNNode* to_node = new GNNNode(si.p, si.n, c_result, depth);
-                GNNConnection* connection = new GNNConnection(from_node, to_node, {si.t});
                 container->add_node(to_node);
-                container->add_connection(connection);
+                
+                // add connection only if from node currently exists
+                if (from_node != nullptr) {
+                    GNNConnection* connection = new GNNConnection(from_node, to_node, {si.t});
+                    container->add_connection(connection);
+                }
 
                 // specify next `from_node` pointer
                 from_node = to_node;

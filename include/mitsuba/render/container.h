@@ -33,8 +33,14 @@ public:
 
     bool add_node(GNNNode* node);
     bool add_connection(GNNConnection* connection);
+
+    void add_origin(Point3f origin);
+    void add_azimuth(Float phi);
+    void add_elevation(Float theta);
+
     void add_direct_radiance(Spectrum radiance);
     void add_indirect_radiance(Spectrum radiance);
+
     void accum_direct_target(Spectrum radiance);
     void accum_indirect_target(Spectrum radiance);
 
@@ -59,6 +65,11 @@ protected:
     bool export_done;
     std::string json_data_str;
 
+    // graph location
+    Point3f c_origin;
+    Float c_elevation; // Theta
+    Float c_azimuth; // Phi
+
     // accumulated radiances at this point
     Spectrum c_direct_radiance; // GNN radiance
     Spectrum c_indirect_radiance; // GNN indirect radiance
@@ -74,7 +85,8 @@ protected:
 template <typename Float, typename Spectrum>
 class MI_EXPORT_LIB SimpleGraphContainer : public GraphContainer<Float, Spectrum> {
 
-    MI_IMPORT_BASE(GraphContainer, connections, nodes, export_done)
+    MI_IMPORT_BASE(GraphContainer, c_origin, connections, nodes, export_done, get_direct_radiance, 
+        get_indirect_radiance, c_elevation, c_azimuth)
     MI_IMPORT_TYPES(Scene, GNNNode, GNNConnection)
 
 public:

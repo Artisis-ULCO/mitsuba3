@@ -15,6 +15,27 @@ MI_VARIANT GraphContainer<Float, Spectrum>::GraphContainer(uint32_t build_at, ui
 
 };
 
+MI_VARIANT void GraphContainer<Float, Spectrum>::add_origin(Point3f origin) {
+
+    // computed the mean origin location of samples
+    Float w = 1.f / (Float)(n_samples + 1);
+    c_origin = (1.f - w) * c_origin + w * origin;
+};
+
+MI_VARIANT void GraphContainer<Float, Spectrum>::add_azimuth(Float phi) {
+
+    // computed the mean phi azimuth angle from camera
+    Float w = 1.f / (Float)(n_samples + 1);
+    c_azimuth = (1.f - w) * c_azimuth + w * phi;
+};
+
+MI_VARIANT void GraphContainer<Float, Spectrum>::add_elevation(Float theta) {
+
+    // computed the mean phi elevation angle from camera
+    Float w = 1.f / (Float)(n_samples + 1);
+    c_elevation = (1.f - w) * c_elevation + w * theta;
+};
+
 MI_VARIANT uint32_t GraphContainer<Float, Spectrum>::number_of_samples() const {
     return n_samples;
 };
@@ -241,6 +262,10 @@ MI_VARIANT void SimpleGraphContainer<Float, Spectrum>::prepare_export() {
     nlohmann::json nodes_pos;
     nlohmann::json nodes_primary;
 
+    data["origin"] = {c_origin.x(), c_origin.y(), c_origin.z()};
+    data["theta"] = c_elevation;
+    data["phi"] = c_azimuth;
+
     for (auto node : nodes) {
         auto node_data = node->to_json();
         nodes_x.push_back(node_data["attr"]);
@@ -276,7 +301,8 @@ MI_VARIANT void SimpleGraphContainer<Float, Spectrum>::prepare_export() {
     data["edge_built"] = edges_built;
 
     // also store current graph radiance (accumulated radiance obtained when extracting data)
-    data["radiance"] = this->get_direct_radiance() + this->get_indirect_radiance();
+    data["direct_radiance"] = get_direct_radiance();
+    data["indirect_radiance"] = get_indirect_radiance();
 
     // store current json representation before clearing
     this->json_data_str = data.dump();
