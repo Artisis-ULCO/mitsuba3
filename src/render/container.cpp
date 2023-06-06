@@ -10,7 +10,8 @@ NAMESPACE_BEGIN(mitsuba)
 // =======================================================================
 
 MI_VARIANT GraphContainer<Float, Spectrum>::GraphContainer(uint32_t build_at, uint32_t n_nodes, uint32_t n_neighbors) 
-    : Object(), build_at(build_at), n_nodes(n_nodes), n_neighbors(n_neighbors), n_samples(0), export_done(false), c_radiance(0.f), target(0.f) {
+    : Object(), build_at(build_at), n_nodes(n_nodes), n_neighbors(n_neighbors), n_samples(0), export_done(false), 
+    c_direct_radiance(0.f), c_indirect_radiance(0.f), direct_target(0.f), indirect_target(0.f) {
 
 };
 
@@ -38,18 +39,32 @@ MI_VARIANT uint32_t GraphContainer<Float, Spectrum>::number_of_connections() con
     return connections.size();
 };
 
-MI_VARIANT void GraphContainer<Float, Spectrum>::add_radiance(Spectrum radiance) {
+MI_VARIANT void GraphContainer<Float, Spectrum>::add_direct_radiance(Spectrum radiance) {
 
-    // keep track of obtained radiances
+    // keep track of obtained direct radiances
     Float w = 1.f / (Float)(n_samples + 1);
-    c_radiance = (1.f - w) * c_radiance + w * radiance;
+    c_direct_radiance = (1.f - w) * c_direct_radiance + w * radiance;
 };
 
-MI_VARIANT void GraphContainer<Float, Spectrum>::accum_target(Spectrum radiance) {
+MI_VARIANT void GraphContainer<Float, Spectrum>::add_indirect_radiance(Spectrum radiance) {
+
+    // keep track of obtained direct radiances
+    Float w = 1.f / (Float)(n_samples + 1);
+    c_indirect_radiance = (1.f - w) * c_indirect_radiance + w * radiance;
+};
+
+MI_VARIANT void GraphContainer<Float, Spectrum>::accum_direct_target(Spectrum radiance) {
 
     // keep track of obtained radiance
     Float w = 1.f / (Float)(n_samples + 1);
-    target = (1.f - w) * target + w * radiance;
+    direct_target = (1.f - w) * direct_target + w * radiance;
+};
+
+MI_VARIANT void GraphContainer<Float, Spectrum>::accum_indirect_target(Spectrum radiance) {
+
+    // keep track of obtained radiance
+    Float w = 1.f / (Float)(n_samples + 1);
+    indirect_target = (1.f - w) * indirect_target + w * radiance;
 };
 
 MI_VARIANT bool GraphContainer<Float, Spectrum>::add_node(GNNNode* node) {
@@ -87,14 +102,24 @@ MI_VARIANT int GraphContainer<Float, Spectrum>::get_node_index(const GNNNode* no
         return -1;
 };
 
-MI_VARIANT Spectrum GraphContainer<Float, Spectrum>::get_target() const {
+MI_VARIANT Spectrum GraphContainer<Float, Spectrum>::get_direct_target() const {
     
-    return target;
+    return direct_target;
 };
 
-MI_VARIANT Spectrum GraphContainer<Float, Spectrum>::get_radiance() const {
+MI_VARIANT Spectrum GraphContainer<Float, Spectrum>::get_indirect_target() const {
     
-    return c_radiance;    
+    return indirect_target;
+};
+
+MI_VARIANT Spectrum GraphContainer<Float, Spectrum>::get_direct_radiance() const {
+    
+    return c_direct_radiance;    
+};
+
+MI_VARIANT Spectrum GraphContainer<Float, Spectrum>::get_indirect_radiance() const {
+    
+    return c_indirect_radiance;    
 };
 
 MI_VARIANT void GraphContainer<Float, Spectrum>::clear() {
@@ -251,7 +276,7 @@ MI_VARIANT void SimpleGraphContainer<Float, Spectrum>::prepare_export() {
     data["edge_built"] = edges_built;
 
     // also store current graph radiance (accumulated radiance obtained when extracting data)
-    data["radiance"] = this->get_radiance();
+    data["radiance"] = this->get_direct_radiance() + this->get_indirect_radiance();
 
     // store current json representation before clearing
     this->json_data_str = data.dump();

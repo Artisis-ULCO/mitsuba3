@@ -18,8 +18,10 @@ public:
     MI_IMPORT_TYPES(GNNNode, GNNConnection, Scene)
 
     uint32_t number_of_samples() const;
-    Spectrum get_radiance() const;
-    Spectrum get_target() const;
+    Spectrum get_direct_radiance() const;
+    Spectrum get_indirect_radiance() const;
+    Spectrum get_direct_target() const;
+    Spectrum get_indirect_target() const;
 
     void update_n_samples();
     bool can_track() const;
@@ -31,8 +33,10 @@ public:
 
     bool add_node(GNNNode* node);
     bool add_connection(GNNConnection* connection);
-    void add_radiance(Spectrum radiance);
-    void accum_target(Spectrum radiance);
+    void add_direct_radiance(Spectrum radiance);
+    void add_indirect_radiance(Spectrum radiance);
+    void accum_direct_target(Spectrum radiance);
+    void accum_indirect_target(Spectrum radiance);
 
     void clear();
 
@@ -56,8 +60,10 @@ protected:
     std::string json_data_str;
 
     // accumulated radiances at this point
-    Spectrum c_radiance; // GNN radiance
-    Spectrum target; // total accumulated radiance
+    Spectrum c_direct_radiance; // GNN radiance
+    Spectrum c_indirect_radiance; // GNN indirect radiance
+    Spectrum direct_target; // total accumulated radiance
+    Spectrum indirect_target; // total accumulated radiance
 
     // Store also graphs, nodes and connections
     std::vector<ref<GNNNode>> nodes;

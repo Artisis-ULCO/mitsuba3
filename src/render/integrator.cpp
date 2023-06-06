@@ -417,13 +417,21 @@ MI_VARIANT void SamplingIntegrator<Float, Spectrum>::render_block(const Scene *s
             // auto from_index = block->channel_count() * ((pos.y() + border)  * block->width() + pos.x() + border);
             // Point2u p = Point2u(dr::floor2int<Point2i>(pos) - block->offset());
             // auto from_index = (pos.y() * size.x() + pos.x()) * block->channel_count();
-            nlohmann::json y_radiances = nlohmann::json::array();
+            nlohmann::json y_direct_radiances = nlohmann::json::array();
+            nlohmann::json y_indirect_radiances = nlohmann::json::array();
 
-            Spectrum mean_radiance = container->get_target();
+            Spectrum direct_radiance = container->get_direct_target();
 
-            y_radiances.push_back(mean_radiance.x());
-            y_radiances.push_back(mean_radiance.y());
-            y_radiances.push_back(mean_radiance.z());
+            y_direct_radiances.push_back(direct_radiance.x());
+            y_direct_radiances.push_back(direct_radiance.y());
+            y_direct_radiances.push_back(direct_radiance.z());
+
+            Spectrum indirect_radiance = container->get_indirect_target();
+
+            y_indirect_radiances.push_back(indirect_radiance.x());
+            y_indirect_radiances.push_back(indirect_radiance.y());
+            y_indirect_radiances.push_back(indirect_radiance.z());
+
 
             std::string index = std::to_string(offset_pos.y()) + "," + std::to_string(offset_pos.x());
 
@@ -431,7 +439,8 @@ MI_VARIANT void SamplingIntegrator<Float, Spectrum>::render_block(const Scene *s
             container->prepare_export();
 
             json_data[index] = container->json();
-            json_data[index]["y"] = y_radiances;
+            json_data[index]["y_direct"] = direct_radiance;
+            json_data[index]["y_indirect"] = indirect_radiance;
 
             container->clear();
 

@@ -159,8 +159,9 @@ public:
 
         // [GNN] default perceived spectrum
         Spectrum empty = 0.f;
+        Spectrum c_direct = 0.f;
         GNNNode* from_node = nullptr;
-        
+
         if (container->can_track()) {
             
             from_node = new GNNNode(ray.o, Vector3f(1.f, 1.f, 1.f), empty, depth, true);
@@ -201,7 +202,6 @@ public:
                     ds.emitter->eval(si, prev_bsdf_pdf > 0.f) * mis_bsdf,
                     result);
 
-                // intermediate GNN
                 c_result = ds.emitter->eval(si, prev_bsdf_pdf > 0.f) * mis_bsdf;
             }
 
@@ -293,6 +293,11 @@ public:
                 // specify next `from_node` pointer
                 from_node = to_node;
             }
+
+            // store current direct radiance information
+            if (depth == 0)
+                c_direct = result;
+
             // ---------------------- BSDF sampling ----------------------
 
             bsdf_weight = si.to_world_mueller(bsdf_weight, -bsdf_sample.wo, si.wi);
@@ -326,7 +331,7 @@ public:
             prev_bsdf_delta = has_flag(bsdf_sample.sampled_type, BSDFFlags::Delta);
 
             // -------------------- Stopping criterion ---------------------
-
+            
             dr::masked(depth, si.is_valid()) += 1;
 
             Float throughput_max = dr::max(unpolarized_spectrum(throughput));
@@ -345,19 +350,17 @@ public:
 
         }
 
-        // gnn_data_file << ";";
-        // gnn_data_file << result.x() << "," << result.y() << "," << result.z();
-        // gnn_data_file << std::endl;
-
         // gnn_data_file.close();
 
         // [GNN] set current obtained targets
         if (container->can_track()) {
-            container->add_radiance(result);
+            container->add_direct_radiance(c_direct);
+            container->add_indirect_radiance(result - c_direct);
         }
 
         // always accumulate radiance
-        container->accum_target(result);
+        container->accum_direct_target(c_direct);
+        container->accum_indirect_target(result - c_direct);
 
         // std::cout << " -- Graph has: " << graph->get_connections().size() << " connections" << std::endl;
         // std::cout << " -- Graph has: " << graph->get_nodes().size() << " nodes" << std::endl;
