@@ -165,19 +165,18 @@ public:
         // In this version, do not add current 
         if (container->can_track()) {
             
-            Float cos_phi   = dr::abs(Frame3f::cos_phi(ray.d));
+            // Float cos_phi   = dr::abs(Frame3f::cos_phi(ray.d));
 
             // could be: dr::asin(Frame3f::sin_theta(ray.d))
-            Float cos_theta   = dr::abs(Frame3f::cos_theta(ray.d));
-            Float sin_theta   = dr::abs(Frame3f::sin_theta(ray.d));
+            // Float cos_theta   = dr::abs(Frame3f::cos_theta(ray.d));
+            // Float sin_theta   = dr::abs(Frame3f::sin_theta(ray.d));
 
-            Float theta = dr::atan(sin_theta / cos_theta);
-            Float phi = dr::acos(cos_phi);
+            // Float theta = dr::atan(sin_theta / cos_theta);
+            // Float phi = dr::acos(cos_phi);
 
-            // add current camera space information
-            container->add_elevation(theta);
-            container->add_azimuth(phi);
+            // add current positional camera information
             container->add_origin(ray.o);
+            container->add_direction(ray.d);
 
         //     from_node = new GNNNode(ray.o, Vector3f(1.f, 1.f, 1.f), empty, depth, true);
         //     container->add_node(from_node);
@@ -293,8 +292,7 @@ public:
             // Save GNN Data
             // Save only current perceived light
             // store also throughput and intermediate result from light sampling (next event)
-            // gnn_data_file << throughput.x() << "," << throughput.y() << "," << throughput.z() << "::";
-            // gnn_data_file << c_result.x() << "," << c_result.y() << "," << c_result.z();
+            // throughput.x() << "," << throughput.y() << "," << throughput.z()
 
             // TODO: save also throughput and/or bsdf_weight
             // [GNN] create `to` node and add connection
@@ -369,17 +367,16 @@ public:
 
         }
 
-        // gnn_data_file.close();
-
         // [GNN] set current obtained targets
         if (container->can_track()) {
+
             container->add_direct_radiance(c_direct);
-            container->add_indirect_radiance(result - c_direct);
+            container->add_indirect_radiance(result - c_direct); // keep only indirect
         }
 
         // always accumulate radiance
         container->accum_direct_target(c_direct);
-        container->accum_indirect_target(result - c_direct);
+        container->accum_indirect_target(result - c_direct); // keep only indirect
 
         // std::cout << " -- Graph has: " << graph->get_connections().size() << " connections" << std::endl;
         // std::cout << " -- Graph has: " << graph->get_nodes().size() << " nodes" << std::endl;

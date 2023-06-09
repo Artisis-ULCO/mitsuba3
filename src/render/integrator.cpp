@@ -420,18 +420,19 @@ MI_VARIANT void SamplingIntegrator<Float, Spectrum>::render_block(const Scene *s
             nlohmann::json y_direct_radiances = nlohmann::json::array();
             nlohmann::json y_indirect_radiances = nlohmann::json::array();
 
+            // store direct obtained radiance
             Spectrum direct_radiance = container->get_direct_target();
 
             y_direct_radiances.push_back(direct_radiance.x());
             y_direct_radiances.push_back(direct_radiance.y());
             y_direct_radiances.push_back(direct_radiance.z());
 
+            // store indirect obtained radiance
             Spectrum indirect_radiance = container->get_indirect_target();
 
             y_indirect_radiances.push_back(indirect_radiance.x());
             y_indirect_radiances.push_back(indirect_radiance.y());
             y_indirect_radiances.push_back(indirect_radiance.z());
-
 
             std::string index = std::to_string(offset_pos.y()) + "," + std::to_string(offset_pos.x());
 
@@ -443,10 +444,6 @@ MI_VARIANT void SamplingIntegrator<Float, Spectrum>::render_block(const Scene *s
             json_data[index]["y_indirect"] = indirect_radiance;
 
             container->clear();
-
-            // TODO: check error when deleting
-            // delete container;
-            // container = nullptr;
         }
 
         // write into GNN file
