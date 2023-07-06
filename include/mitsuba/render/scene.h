@@ -504,6 +504,9 @@ public:
      */
     bool shapes_grad_enabled() const { return m_shapes_grad_enabled; };
 
+    // [GNN]
+    std::string get_output_gnn() const { return m_output_gnn; };
+
     /// Return a human-readable string representation of the scene contents.
     virtual std::string to_string() const override;
 
@@ -577,6 +580,9 @@ protected:
     ref<Emitter> m_environment;
     ScalarFloat m_emitter_pmf;
     std::unique_ptr<DiscreteDistribution<Float>> m_emitter_distr = nullptr;
+
+    // [GNN]
+    std::string m_output_gnn;
 
     bool m_shapes_grad_enabled;
 };

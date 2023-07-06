@@ -102,7 +102,7 @@ class VolpathMisIntegratorImpl final : public MonteCarloIntegrator<Float, Spectr
 public:
     MI_IMPORT_BASE(MonteCarloIntegrator, m_max_depth, m_rr_depth, m_hide_emitters)
     MI_IMPORT_TYPES(Scene, Sampler, Emitter, EmitterPtr, BSDF, BSDFPtr,
-                     Medium, MediumPtr, PhaseFunctionContext)
+                     Medium, MediumPtr, PhaseFunctionContext, GraphContainer)
 
     using WeightMatrix =
         std::conditional_t<SpectralMis, dr::Matrix<Float, dr::array_size_v<UnpolarizedSpectrum>>,
@@ -124,7 +124,9 @@ public:
 
     std::pair<Spectrum, Mask> sample(const Scene *scene,
                                      Sampler *sampler,
+                                     const Vector2f & /* pos */,
                                      const RayDifferential3f &ray_,
+                                     GraphContainer */* container */,
                                      const Medium *initial_medium,
                                      Float * /* aovs */,
                                      Mask active) const override {

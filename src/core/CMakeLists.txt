@@ -11,6 +11,7 @@ set(INC_DIR "../../include/mitsuba/core")
 
 add_library(mitsuba-core OBJECT
   ${INC_DIR}/../mitsuba.h
+  ${INC_DIR}/../json.hpp
   ${INC_DIR}/atomic.h
   ${INC_DIR}/frame.h
   ${INC_DIR}/fwd.h

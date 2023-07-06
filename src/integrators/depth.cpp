@@ -30,13 +30,15 @@ template <typename Float, typename Spectrum>
 class DepthIntegrator final : public SamplingIntegrator<Float, Spectrum> {
 public:
     MI_IMPORT_BASE(SamplingIntegrator)
-    MI_IMPORT_TYPES(Scene, Sampler, Medium)
+    MI_IMPORT_TYPES(Scene, Sampler, Medium, GraphContainer)
 
     DepthIntegrator(const Properties &props) : Base(props) { }
 
     std::pair<Spectrum, Mask> sample(const Scene *scene,
                                      Sampler * /* sampler */,
+                                     const Vector2f & /* pos */,
                                      const RayDifferential3f &ray,
+                                     GraphContainer* /* container */,
                                      const Medium * /* medium */,
                                      Float * /* aovs */,
                                      Mask active) const override {

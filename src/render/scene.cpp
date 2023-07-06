@@ -20,7 +20,11 @@
 NAMESPACE_BEGIN(mitsuba)
 
 MI_VARIANT Scene<Float, Spectrum>::Scene(const Properties &props) {
+
+    m_output_gnn = props.get<std::string>("output_gnn", "gnn_data");
+
     for (auto &[k, v] : props.objects()) {
+        
         Scene *scene           = dynamic_cast<Scene *>(v.get());
         Shape *shape           = dynamic_cast<Shape *>(v.get());
         Mesh *mesh             = dynamic_cast<Mesh *>(v.get());
@@ -332,6 +336,8 @@ MI_VARIANT Spectrum Scene<Float, Spectrum>::eval_emitter_direction(
 }
 
 MI_VARIANT void Scene<Float, Spectrum>::traverse(TraversalCallback *callback) {
+    // [GNN]
+    callback->put_parameter("output_gnn", m_output_gnn, +ParamFlags::NonDifferentiable);
     for (auto& child : m_children) {
         std::string id = child->id();
         if (id.empty() || string::starts_with(id, "_unnamed_"))

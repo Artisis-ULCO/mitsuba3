@@ -7,10 +7,10 @@
 #include <mitsuba/core/vector.h>
 #include <mitsuba/render/sampler.h>
 #include <mitsuba/render/fwd.h>
+#include <mitsuba/render/container.h>
 #include <mitsuba/render/texture.h>
 
 NAMESPACE_BEGIN(mitsuba)
-
 
 /**
  * \brief This list of flags is used to classify the different types of films.
@@ -49,7 +49,8 @@ MI_DECLARE_ENUM_OPERATORS(FilmFlags)
 template <typename Float, typename Spectrum>
 class MI_EXPORT_LIB Film : public Object {
 public:
-    MI_IMPORT_TYPES(ImageBlock, ReconstructionFilter, Texture)
+    // [MIS]: add of MIS Model type from `mitsuba/render/fwd.h`
+    MI_IMPORT_TYPES(ImageBlock, ReconstructionFilter, Texture, GraphContainer)
 
     /**
      * Configure the film for rendering a specified set of extra channels (AOVS).
@@ -198,6 +199,23 @@ public:
     void traverse(TraversalCallback *callback) override;
     void parameters_changed(const std::vector<std::string> &/*keys*/ = {}) override;
 
+    GraphContainer *get_container(const Point2f &pos) const {
+        
+        // uint32_t pos_index = (uint32_t) dr::slice(pos.y() * m_crop_size.x() + pos.x(), 0);
+        uint32_t pos_index = pos.y() * m_crop_size.x() + pos.x();
+        // [MIS]: Debug
+        // std::cout << pos << std::endl;
+
+        Assert(pos_index < containers.size()); 
+        return containers[pos_index].get();
+    }
+
+    void reset_container(const Point2f &pos) {
+        
+        uint32_t pos_index = pos.y() * m_crop_size.x() + pos.x();
+        Assert(pos_index < containers.size()); 
+        containers[pos_index].reset();
+    }
     //! @}
     // =============================================================
 
@@ -211,13 +229,23 @@ protected:
     /// Virtual destructor
     virtual ~Film();
 
+    void init_container();
+
     /// Combined flags for all properties of this film.
     uint32_t m_flags;
 
 protected:
+    // [MIS]
+    std::string m_gnn_integrator_type;
+    uint32_t m_gnn_until;
+    uint32_t m_gnn_nodes;
+    uint32_t m_gnn_neighbors;
+    std::vector<std::unique_ptr<GraphContainer>> containers;
+
     ScalarVector2u m_size;
     ScalarVector2u m_crop_size;
     ScalarPoint2u m_crop_offset;
+
     bool m_sample_border;
     ref<ReconstructionFilter> m_filter;
     ref<Texture> m_srf;

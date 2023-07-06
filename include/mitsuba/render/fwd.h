@@ -34,6 +34,12 @@ template <typename Float, typename Spectrum> class Volume;
 template <typename Float, typename Spectrum> class VolumeGrid;
 template <typename Float, typename Spectrum> class MeshAttribute;
 
+// [GNN]
+template <typename Float, typename Spectrum> class GNNNode;
+template <typename Float, typename Spectrum> class GNNConnection;
+template <typename Float, typename Spectrum> class GraphContainer;
+template <typename Float, typename Spectrum> class SimpleGraphContainer;
+
 template <typename Float, typename Spectrum> struct DirectionSample;
 template <typename Float, typename Spectrum> struct PositionSample;
 template <typename Float, typename Spectrum> struct BSDFSample3;
@@ -95,6 +101,13 @@ template <typename Float_, typename Spectrum_> struct RenderAliases {
     using Texture                = mitsuba::Texture<FloatU, SpectrumU>;
     using Volume                 = mitsuba::Volume<FloatU, SpectrumU>;
     using VolumeGrid             = mitsuba::VolumeGrid<FloatU, SpectrumU>;
+
+    // [GNN]
+    using GNNNode                = mitsuba::GNNNode<FloatU, SpectrumU>;
+    using GNNConnection          = mitsuba::GNNConnection<FloatU, SpectrumU>;                                              
+    using GraphContainer         = mitsuba::GraphContainer<FloatU, SpectrumU>;                         
+    using SimpleGraphContainer   = mitsuba::SimpleGraphContainer<FloatU, SpectrumU>;                         
+    
 
     using MeshAttribute          = mitsuba::MeshAttribute<FloatU, SpectrumU>;
 
@@ -168,6 +181,10 @@ template <typename Float_, typename Spectrum_> struct RenderAliases {
     using SamplingIntegrator     = typename RenderAliases::SamplingIntegrator;                     \
     using MonteCarloIntegrator   = typename RenderAliases::MonteCarloIntegrator;                   \
     using AdjointIntegrator      = typename RenderAliases::AdjointIntegrator;                      \
+    using GNNNode                = typename RenderAliases::GNNNode;                                \
+    using GNNConnection          = typename RenderAliases::GNNConnection;                          \
+    using GraphContainer         = typename RenderAliases::GraphContainer;                         \
+    using SimpleGraphContainer   = typename RenderAliases::SimpleGraphContainer;                   \
     using BSDF                   = typename RenderAliases::BSDF;                                   \
     using OptixDenoiser          = typename RenderAliases::OptixDenoiser;                          \
     using Sensor                 = typename RenderAliases::Sensor;                                 \
